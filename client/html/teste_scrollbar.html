@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Scrollbar</title>
+    <style>
+        .test-carousel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: #A6A6A6 #F2F2F2;
+            min-width: 100%;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+
+        .test-carousel::-webkit-scrollbar {
+            height: 8px;
+            -webkit-appearance: none;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .test-carousel::-webkit-scrollbar-track {
+            background: #F2F2F2;
+            border-radius: 4px;
+        }
+
+        .test-carousel::-webkit-scrollbar-thumb {
+            background: #A6A6A6;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .test-carousel::-webkit-scrollbar-thumb:hover {
+            background: #1C2A39;
+        }
+
+        .test-card {
+            background: white;
+            border: 1px solid #A6A6A6;
+            border-radius: 16px;
+            padding: 1.5rem;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-carousel">
+        <div class="test-card">Card 1</div>
+        <div class="test-card">Card 2</div>
+        <div class="test-card">Card 3</div>
+        <div class="test-card">Card 4</div>
+        <div class="test-card">Card 5</div>
+        <div class="test-card">Card 6</div>
+        <div class="test-card">Card 7</div>
+        <div class="test-card">Card 8</div>
+    </div>
+</body>
+</html>

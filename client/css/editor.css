@@ -13,7 +13,8 @@
     z-index: 10;
 }
 
-#file-editor[style*="display: flex"] {
+#file-editor[style*="display: flex"],
+#file-editor[style*="display:flex"] {
     display: flex !important;
 }
 

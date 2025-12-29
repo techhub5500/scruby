@@ -39,10 +39,15 @@ function closeLeftSidebar() {
 }
 
 // Toggle right sidebar
-document.getElementById('toggle-right').addEventListener('click', function() {
-    const sidebar = document.getElementById('right-sidebar');
-    sidebar.classList.toggle('expanded');
-});
+const toggleRightBtn = document.getElementById('toggle-right');
+if (toggleRightBtn) {
+    toggleRightBtn.addEventListener('click', function() {
+        const sidebar = document.getElementById('right-sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('expanded');
+        }
+    });
+}
 
 // Resize left sidebar
 const leftSidebar = document.getElementById('left-sidebar');
@@ -181,6 +186,8 @@ function isDescendant(node, potentialAncestor) {
 function renderTree() {
     nodeMap.clear();
     const tree = document.getElementById('file-tree');
+    if (!tree) return; // Elemento não existe na página
+    
     tree.innerHTML = '';
     
     // Remove old event listeners by cloning
@@ -245,7 +252,8 @@ function renderNode(node, parentElement, parentNode) {
     
     li.draggable = true;
     
-    li.addEventListener('click', () => {
+    li.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (node.type === 'folder') {
             li.classList.toggle('expanded');
             const icon = li.querySelector('i');
@@ -256,9 +264,10 @@ function renderNode(node, parentElement, parentNode) {
             }
             currentFolder = node;
         } else if (node.type === 'file') {
-            if (window.Editor && window.Editor.openFileEditor) {
-                window.Editor.openFileEditor(node);
-            }
+            console.log('File clicked:', node);
+            console.log('window.Editor:', window.Editor);
+            // Try to open the file directly
+            openFileInEditor(node);
         }
     });
     
@@ -326,115 +335,149 @@ let draggedParent = null;
 
 function showContextMenu(e, node, parent) {
     const menu = document.getElementById('context-menu');
+    if (!menu) return;
+    
     menu.style.left = e.clientX + 'px';
     menu.style.top = e.clientY + 'px';
     menu.style.display = 'block';
     contextNode = node;
     contextParent = parent;
+    
+    const createFileOpt = document.getElementById('create-file-option');
+    const createFolderOpt = document.getElementById('create-folder-option');
+    const copyOpt = document.getElementById('copy-option');
+    const pasteOpt = document.getElementById('paste-option');
+    const deleteOpt = document.getElementById('delete-option');
+    const renameOpt = document.getElementById('rename-option');
+    
     if (node) {
         if (node.type === 'folder') {
-            document.getElementById('create-file-option').style.display = 'block';
-            document.getElementById('create-folder-option').style.display = 'block';
+            if (createFileOpt) createFileOpt.style.display = 'block';
+            if (createFolderOpt) createFolderOpt.style.display = 'block';
         } else {
-            document.getElementById('create-file-option').style.display = 'none';
-            document.getElementById('create-folder-option').style.display = 'none';
+            if (createFileOpt) createFileOpt.style.display = 'none';
+            if (createFolderOpt) createFolderOpt.style.display = 'none';
         }
-        document.getElementById('copy-option').style.display = 'block';
-        document.getElementById('paste-option').style.display = 'none';
-        document.getElementById('delete-option').style.display = 'block';
-        document.getElementById('rename-option').style.display = 'block';
+        if (copyOpt) copyOpt.style.display = 'block';
+        if (pasteOpt) pasteOpt.style.display = 'none';
+        if (deleteOpt) deleteOpt.style.display = 'block';
+        if (renameOpt) renameOpt.style.display = 'block';
     } else {
         // empty
-        document.getElementById('create-file-option').style.display = 'block';
-        document.getElementById('create-folder-option').style.display = 'block';
-        document.getElementById('copy-option').style.display = 'none';
-        document.getElementById('paste-option').style.display = clipboard ? 'block' : 'none';
-        document.getElementById('delete-option').style.display = 'none';
-        document.getElementById('rename-option').style.display = 'none';
+        if (createFileOpt) createFileOpt.style.display = 'block';
+        if (createFolderOpt) createFolderOpt.style.display = 'block';
+        if (copyOpt) copyOpt.style.display = 'none';
+        if (pasteOpt) pasteOpt.style.display = clipboard ? 'block' : 'none';
+        if (deleteOpt) deleteOpt.style.display = 'none';
+        if (renameOpt) renameOpt.style.display = 'none';
     }
 }
 
-document.getElementById('left-sidebar').addEventListener('contextmenu', (e) => {
-    if (e.target.id === 'folder-content' || e.target.classList.contains('tree') || e.target.id === 'file-tree') {
-        e.preventDefault();
-        showContextMenu(e, null, null);
-    }
-});
+const leftSidebarElement = document.getElementById('left-sidebar');
+if (leftSidebarElement) {
+    leftSidebarElement.addEventListener('contextmenu', (e) => {
+        if (e.target.id === 'folder-content' || e.target.classList.contains('tree') || e.target.id === 'file-tree') {
+            e.preventDefault();
+            showContextMenu(e, null, null);
+        }
+    });
+}
 
-document.getElementById('create-file-option').addEventListener('click', () => {
-    const target = contextNode ? contextNode : fileSystem;
-    const name = prompt('Nome do arquivo:');
-    if (name) {
-        target.children.push({
-            name: name,
-            type: 'file',
-            content: ''
-        });
-        window.fileSystemData = fileSystem;
-        renderTree();
-        saveFileSystem();
-    }
-    hideMenu();
-});
-
-document.getElementById('create-folder-option').addEventListener('click', () => {
-    const target = contextNode ? contextNode : fileSystem;
-    const name = prompt('Nome da pasta:');
-    if (name) {
-        target.children.push({
-            name: name,
-            type: 'folder',
-            children: []
-        });
-        window.fileSystemData = fileSystem;
-        renderTree();
-        saveFileSystem();
-    }
-    hideMenu();
-});
-
-document.getElementById('copy-option').addEventListener('click', () => {
-    clipboard = JSON.parse(JSON.stringify(contextNode));
-    hideMenu();
-});
-
-document.getElementById('paste-option').addEventListener('click', () => {
-    if (clipboard) {
+const createFileOption = document.getElementById('create-file-option');
+if (createFileOption) {
+    createFileOption.addEventListener('click', () => {
         const target = contextNode ? contextNode : fileSystem;
-        target.children.push(JSON.parse(JSON.stringify(clipboard)));
-        window.fileSystemData = fileSystem;
-        renderTree();
-        saveFileSystem();
-    }
-    hideMenu();
-});
-
-document.getElementById('delete-option').addEventListener('click', () => {
-    if (confirm(`Apagar "${contextNode.name}"?`)) {
-        const index = contextParent.children.indexOf(contextNode);
-        if (index !== -1) {
-            contextParent.children.splice(index, 1);
+        const name = prompt('Nome do arquivo:');
+        if (name) {
+            target.children.push({
+                name: name,
+                type: 'file',
+                content: ''
+            });
             window.fileSystemData = fileSystem;
             renderTree();
             saveFileSystem();
         }
-    }
-    hideMenu();
-});
+        hideMenu();
+    });
+}
 
-document.getElementById('rename-option').addEventListener('click', () => {
-    const newName = prompt('Novo nome:', contextNode.name);
-    if (newName) {
-        contextNode.name = newName;
-        window.fileSystemData = fileSystem;
-        renderTree();
-        saveFileSystem();
-    }
-    hideMenu();
-});
+const createFolderOption = document.getElementById('create-folder-option');
+if (createFolderOption) {
+    createFolderOption.addEventListener('click', () => {
+        const target = contextNode ? contextNode : fileSystem;
+        const name = prompt('Nome da pasta:');
+        if (name) {
+            target.children.push({
+                name: name,
+                type: 'folder',
+                children: []
+            });
+            window.fileSystemData = fileSystem;
+            renderTree();
+            saveFileSystem();
+        }
+        hideMenu();
+    });
+}
+
+const copyOption = document.getElementById('copy-option');
+if (copyOption) {
+    copyOption.addEventListener('click', () => {
+        clipboard = JSON.parse(JSON.stringify(contextNode));
+        hideMenu();
+    });
+}
+
+const pasteOption = document.getElementById('paste-option');
+if (pasteOption) {
+    pasteOption.addEventListener('click', () => {
+        if (clipboard) {
+            const target = contextNode ? contextNode : fileSystem;
+            target.children.push(JSON.parse(JSON.stringify(clipboard)));
+            window.fileSystemData = fileSystem;
+            renderTree();
+            saveFileSystem();
+        }
+        hideMenu();
+    });
+}
+
+const deleteOption = document.getElementById('delete-option');
+if (deleteOption) {
+    deleteOption.addEventListener('click', () => {
+        if (confirm(`Apagar "${contextNode.name}"?`)) {
+            const index = contextParent.children.indexOf(contextNode);
+            if (index !== -1) {
+                contextParent.children.splice(index, 1);
+                window.fileSystemData = fileSystem;
+                renderTree();
+                saveFileSystem();
+            }
+        }
+        hideMenu();
+    });
+}
+
+const renameOption = document.getElementById('rename-option');
+if (renameOption) {
+    renameOption.addEventListener('click', () => {
+        const newName = prompt('Novo nome:', contextNode.name);
+        if (newName) {
+            contextNode.name = newName;
+            window.fileSystemData = fileSystem;
+            renderTree();
+            saveFileSystem();
+        }
+        hideMenu();
+    });
+}
 
 function hideMenu() {
-    document.getElementById('context-menu').style.display = 'none';
+    const contextMenu = document.getElementById('context-menu');
+    if (contextMenu) {
+        contextMenu.style.display = 'none';
+    }
 }
 
 document.addEventListener('click', () => {
@@ -456,55 +499,186 @@ document.getElementById('chat-icon-btn').addEventListener('click', () => {
 });
 
 // Close buttons for each sidebar content
-document.getElementById('close-sidebar-btn').addEventListener('click', () => {
-    closeLeftSidebar();
-});
+const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', () => {
+        closeLeftSidebar();
+    });
+}
 
-document.getElementById('close-sidebar-btn-chat').addEventListener('click', () => {
-    closeLeftSidebar();
-});
+const closeSidebarBtnChat = document.getElementById('close-sidebar-btn-chat');
+if (closeSidebarBtnChat) {
+    closeSidebarBtnChat.addEventListener('click', () => {
+        closeLeftSidebar();
+    });
+}
 
 // Add folder and file buttons inside the folder content
-document.getElementById('add-folder').addEventListener('click', () => {
-    const name = prompt('Nome da pasta:');
-    if (name) {
-        fileSystem.children.push({
-            name: name,
-            type: 'folder',
-            children: []
-        });
-        
-        currentFolder = fileSystem; // Reset to root
-        window.fileSystemData = fileSystem;
-        
-        renderTree();
-        saveFileSystem();
-    }
-});
+const addFolderBtn = document.getElementById('add-folder');
+if (addFolderBtn) {
+    addFolderBtn.addEventListener('click', () => {
+        const name = prompt('Nome da pasta:');
+        if (name) {
+            fileSystem.children.push({
+                name: name,
+                type: 'folder',
+                children: []
+            });
+            
+            currentFolder = fileSystem; // Reset to root
+            window.fileSystemData = fileSystem;
+            
+            renderTree();
+            saveFileSystem();
+        }
+    });
+}
 
-document.getElementById('add-file').addEventListener('click', () => {
-    const name = prompt('Nome do arquivo:');
-    if (name) {
-        fileSystem.children.push({
-            name: name,
-            type: 'file',
-            content: ''
-        });
-        
-        currentFolder = fileSystem;
-        window.fileSystemData = fileSystem;
-        renderTree();
-        saveFileSystem();
-    }
-});
+const addFileBtn = document.getElementById('add-file');
+if (addFileBtn) {
+    addFileBtn.addEventListener('click', () => {
+        const name = prompt('Nome do arquivo:');
+        if (name) {
+            fileSystem.children.push({
+                name: name,
+                type: 'file',
+                content: ''
+            });
+            
+            currentFolder = fileSystem;
+            window.fileSystemData = fileSystem;
+            renderTree();
+            saveFileSystem();
+        }
+    });
+}
 
 // Initialize editor
 if (window.Editor && window.Editor.init) {
     window.Editor.init();
 }
 
+// Function to open file in editor - handles both direct call and Editor availability
+function openFileInEditor(file) {
+    console.log('openFileInEditor called with:', file);
+    
+    // Check if we're on the correct page (index.html with editor)
+    const fileEditor = document.getElementById('file-editor');
+    
+    if (!fileEditor) {
+        console.log('Not on index.html page, redirecting...');
+        // Store file info in sessionStorage and redirect to index.html
+        sessionStorage.setItem('fileToOpen', JSON.stringify(file));
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Check if Editor is available
+    if (window.Editor && typeof window.Editor.openFileEditor === 'function') {
+        console.log('Editor is available, opening file');
+        window.Editor.openFileEditor(file);
+    } else {
+        console.log('Editor not yet available, trying manual open');
+        // Fallback: open editor manually
+        manualOpenEditor(file);
+    }
+}
+
+// Manual editor opening function
+function manualOpenEditor(file) {
+    console.log('manualOpenEditor called');
+    
+    // Try to find content first
+    const content = document.getElementById('content');
+    if (!content) {
+        console.error('Content element not found!');
+        return;
+    }
+    
+    console.log('Content found, searching for child elements...');
+    console.log('Content innerHTML length:', content.innerHTML.length);
+    
+    // Search within content
+    let fileEditor = content.querySelector('#file-editor');
+    let defaultContent = content.querySelector('#default-content');
+    
+    // If not found, try direct search
+    if (!fileEditor) {
+        console.log('file-editor not found in content, trying document');
+        fileEditor = document.getElementById('file-editor');
+    }
+    
+    if (!defaultContent) {
+        console.log('default-content not found in content, trying document');
+        defaultContent = document.getElementById('default-content');
+    }
+    
+    console.log('Final elements found:', {
+        fileEditor: !!fileEditor,
+        defaultContent: !!defaultContent,
+        content: !!content
+    });
+    
+    if (!fileEditor) {
+        console.error('file-editor still not found! HTML structure may be different');
+        console.log('Content children:', content.children);
+        return;
+    }
+    
+    // Find or create container
+    let container = fileEditor.querySelector('.pages-container');
+    if (!container) {
+        console.log('pages-container not found, searching globally');
+        container = document.querySelector('.pages-container');
+    }
+    
+    if (!container) {
+        console.error('Could not find pages-container');
+        return;
+    }
+    
+    console.log('Container found, creating page...');
+    container.innerHTML = '';
+    const page = document.createElement('div');
+    page.className = 'editor-content page';
+    page.contentEditable = 'true';
+    page.spellcheck = true;
+    page.innerHTML = file.content || '<p>Comece a escrever aqui...</p>';
+    container.appendChild(page);
+    
+    console.log('Setting display styles...');
+    fileEditor.style.display = 'flex';
+    if (defaultContent) {
+        defaultContent.style.display = 'none';
+    }
+    content.classList.add('editor-open');
+    
+    // Store current file globally
+    window.currentFile = file;
+    
+    setTimeout(() => {
+        page.focus();
+        console.log('Editor opened successfully!');
+    }, 100);
+}
+
 // Load file system on page load
 loadFileSystem();
+
+// Check if we need to open a file after redirect
+document.addEventListener('DOMContentLoaded', () => {
+    const fileToOpen = sessionStorage.getItem('fileToOpen');
+    if (fileToOpen) {
+        console.log('Found file to open from redirect');
+        sessionStorage.removeItem('fileToOpen');
+        const file = JSON.parse(fileToOpen);
+        
+        // Wait a bit for editor to initialize
+        setTimeout(() => {
+            openFileInEditor(file);
+        }, 500);
+    }
+});
 
 // Chat functionality
 const chatMessages = document.getElementById('chat-messages');
@@ -516,6 +690,8 @@ let messages = [];
 
 // Function to add a message to the chat
 function addMessage(username, text, isOwn = false) {
+    if (!chatMessages) return; // Prevent error if chat not present
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = `chat-message ${isOwn ? 'own-message' : ''}`;
     
@@ -540,6 +716,8 @@ function addMessage(username, text, isOwn = false) {
 
 // Function to send a message
 function sendMessage() {
+    if (!chatInput) return;
+    
     const text = chatInput.value.trim();
     if (text) {
         addMessage('Você', text, true);
@@ -562,14 +740,18 @@ function sendMessage() {
 }
 
 // Event listeners for chat
-sendChatBtn.addEventListener('click', sendMessage);
+if (sendChatBtn) {
+    sendChatBtn.addEventListener('click', sendMessage);
+}
 
-chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMessage();
-    }
-});
+if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+}
 
 // Add welcome message
 addMessage('Sistema', 'Bem-vindo ao chat! Conectado com sucesso.', false);

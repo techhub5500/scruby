@@ -4,8 +4,19 @@ let currentFile = null;
 
 // Open file editor
 function openFileEditor(file) {
+    console.log('Opening file:', file);
     currentFile = file;
+    
+    const fileEditor = document.getElementById('file-editor');
+    const defaultContent = document.getElementById('default-content');
+    const content = document.getElementById('content');
     const container = document.querySelector('.pages-container');
+    
+    if (!fileEditor || !defaultContent || !content || !container) {
+        console.error('Editor elements not found');
+        return;
+    }
+    
     container.innerHTML = '';
     const page = document.createElement('div');
     page.className = 'editor-content page';
@@ -13,12 +24,15 @@ function openFileEditor(file) {
     page.spellcheck = true;
     page.innerHTML = file.content || '';
     container.appendChild(page);
-    document.getElementById('file-editor').style.display = 'flex';
-    document.getElementById('default-content').style.display = 'none';
-    document.getElementById('content').classList.add('editor-open');
+    
+    fileEditor.style.display = 'flex';
+    defaultContent.style.display = 'none';
+    content.classList.add('editor-open');
     
     // Focus on the page
-    page.focus();
+    setTimeout(() => page.focus(), 100);
+    
+    console.log('Editor opened successfully');
 }
 
 // Save file content
@@ -113,62 +127,88 @@ function changeFontSize(size) {
 
 // Initialize editor event listeners
 function initEditor() {
-    // Save button
-    document.getElementById('save-file').addEventListener('click', saveFile);
+    // Check if save button exists before adding listener
+    const saveBtn = document.getElementById('save-file');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveFile);
+    }
     
-    // Formatting buttons
-    document.getElementById('btn-bold').addEventListener('click', () => formatText('bold'));
-    document.getElementById('btn-italic').addEventListener('click', () => formatText('italic'));
-    document.getElementById('btn-underline').addEventListener('click', () => formatText('underline'));
-    document.getElementById('btn-strikethrough').addEventListener('click', () => formatText('strikeThrough'));
-    document.getElementById('btn-clear').addEventListener('click', clearFormatting);
+    // Check if all buttons exist before adding listeners
+    const btnBold = document.getElementById('btn-bold');
+    const btnItalic = document.getElementById('btn-italic');
+    const btnUnderline = document.getElementById('btn-underline');
+    const btnStrikethrough = document.getElementById('btn-strikethrough');
+    const btnClear = document.getElementById('btn-clear');
+    
+    if (btnBold) btnBold.addEventListener('click', () => formatText('bold'));
+    if (btnItalic) btnItalic.addEventListener('click', () => formatText('italic'));
+    if (btnUnderline) btnUnderline.addEventListener('click', () => formatText('underline'));
+    if (btnStrikethrough) btnStrikethrough.addEventListener('click', () => formatText('strikeThrough'));
+    if (btnClear) btnClear.addEventListener('click', clearFormatting);
     
     // Alignment buttons
-    document.getElementById('btn-align-left').addEventListener('click', () => formatText('justifyLeft'));
-    document.getElementById('btn-align-center').addEventListener('click', () => formatText('justifyCenter'));
-    document.getElementById('btn-align-right').addEventListener('click', () => formatText('justifyRight'));
+    const btnAlignLeft = document.getElementById('btn-align-left');
+    const btnAlignCenter = document.getElementById('btn-align-center');
+    const btnAlignRight = document.getElementById('btn-align-right');
+    
+    if (btnAlignLeft) btnAlignLeft.addEventListener('click', () => formatText('justifyLeft'));
+    if (btnAlignCenter) btnAlignCenter.addEventListener('click', () => formatText('justifyCenter'));
+    if (btnAlignRight) btnAlignRight.addEventListener('click', () => formatText('justifyRight'));
     
     // List buttons
-    document.getElementById('btn-ul').addEventListener('click', () => formatText('insertUnorderedList'));
-    document.getElementById('btn-ol').addEventListener('click', () => formatText('insertOrderedList'));
+    const btnUl = document.getElementById('btn-ul');
+    const btnOl = document.getElementById('btn-ol');
+    
+    if (btnUl) btnUl.addEventListener('click', () => formatText('insertUnorderedList'));
+    if (btnOl) btnOl.addEventListener('click', () => formatText('insertOrderedList'));
     
     // Font controls
-    document.getElementById('font-select').addEventListener('change', (e) => {
-        changeFontFamily(e.target.value);
-    });
+    const fontSelect = document.getElementById('font-select');
+    const fontSize = document.getElementById('font-size');
     
-    document.getElementById('font-size').addEventListener('change', (e) => {
-        changeFontSize(e.target.value);
-    });
+    if (fontSelect) {
+        fontSelect.addEventListener('change', (e) => {
+            changeFontFamily(e.target.value);
+        });
+    }
+    
+    if (fontSize) {
+        fontSize.addEventListener('change', (e) => {
+            changeFontSize(e.target.value);
+        });
+    }
     
     // Keyboard shortcuts
-    document.querySelector('.pages-container').addEventListener('keydown', (e) => {
-        // Ctrl+S to save
-        if (e.ctrlKey && e.key === 's') {
-            e.preventDefault();
-            saveFile();
-        }
-        // Ctrl+A to select all
-        if (e.ctrlKey && e.key === 'a') {
-            e.preventDefault();
-            selectAll();
-        }
-        // Ctrl+B for bold
-        if (e.ctrlKey && e.key === 'b') {
-            e.preventDefault();
-            formatText('bold');
-        }
-        // Ctrl+I for italic
-        if (e.ctrlKey && e.key === 'i') {
-            e.preventDefault();
-            formatText('italic');
-        }
-        // Ctrl+U for underline
-        if (e.ctrlKey && e.key === 'u') {
-            e.preventDefault();
-            formatText('underline');
-        }
-    });
+    const pagesContainer = document.querySelector('.pages-container');
+    if (pagesContainer) {
+        pagesContainer.addEventListener('keydown', (e) => {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveFile();
+            }
+            // Ctrl+A to select all
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                selectAll();
+            }
+            // Ctrl+B for bold
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                formatText('bold');
+            }
+            // Ctrl+I for italic
+            if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                formatText('italic');
+            }
+            // Ctrl+U for underline
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                formatText('underline');
+            }
+        });
+    }
 }
 
 function selectAll() {
@@ -184,9 +224,19 @@ function selectAll() {
 }
 
 // Export functions for use in other files
-window.Editor = {
-    openFileEditor: openFileEditor,
-    saveFile: saveFile,
-    closeEditor: closeEditor,
-    init: initEditor
-};
+if (typeof window !== 'undefined') {
+    window.Editor = {
+        openFileEditor: openFileEditor,
+        saveFile: saveFile,
+        closeEditor: closeEditor,
+        init: initEditor
+    };
+    
+    // Auto-initialize if DOM is already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEditor);
+    } else {
+        // DOM is already ready, initialize now
+        initEditor();
+    }
+}

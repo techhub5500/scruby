@@ -28,8 +28,8 @@
                     <button id="close-sidebar-btn" class="close-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="explorer-actions">
-                    <button id="add-folder" class="explorer-btn" title="Nova Pasta"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
-                    <button id="add-file" class="explorer-btn" title="Novo Arquivo"><i class="fas fa-file-plus"></i> Novo Arquivo</button>
+                    <button id="add-folder" class="explorer-btn" title="Nova Pasta"><i class="fas fa-folder-plus"></i></button>
+                    <button id="add-file" class="explorer-btn" title="Novo Arquivo"><i class="fas fa-file-plus"></i></button>
                 </div>
                 <ul id="file-tree" class="tree">
                     <!-- File tree will be populated by JS -->
@@ -46,12 +46,12 @@
             </div>
             
             <div id="context-menu" class="context-menu">
-                <div id="create-file-option" class="menu-item">Criar Arquivo</div>
-                <div id="create-folder-option" class="menu-item">Criar Pasta</div>
-                <div id="copy-option" class="menu-item">Copiar</div>
-                <div id="paste-option" class="menu-item">Colar</div>
-                <div id="delete-option" class="menu-item">Apagar</div>
-                <div id="rename-option" class="menu-item">Renomear</div>
+                <div id="create-file-option" class="menu-item" title="Criar Arquivo"><i class="fas fa-file-plus"></i></div>
+                <div id="create-folder-option" class="menu-item" title="Criar Pasta"><i class="fas fa-folder-plus"></i></div>
+                <div id="copy-option" class="menu-item" title="Copiar"><i class="fas fa-copy"></i></div>
+                <div id="paste-option" class="menu-item" title="Colar"><i class="fas fa-paste"></i></div>
+                <div id="delete-option" class="menu-item" title="Apagar"><i class="fas fa-trash"></i></div>
+                <div id="rename-option" class="menu-item" title="Renomear"><i class="fas fa-edit"></i></div>
             </div>
         </aside>
         <main id="main">
@@ -147,5 +147,13 @@
     </div>
     <script src="../js/editor.js"></script>
     <script src="../js/main.js"></script>
+    <script>
+        // Initialize editor when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Editor && window.Editor.init) {
+                window.Editor.init();
+            }
+        });
+    </script>
 </body>
 </html>
