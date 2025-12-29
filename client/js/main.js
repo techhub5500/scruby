@@ -273,6 +273,8 @@ function renderNode(node, parentElement, parentNode) {
     
     li.addEventListener('contextmenu', (e) => {
         e.preventDefault();
+        e.stopPropagation();
+        console.log('Context menu triggered on:', node.name, 'Type:', node.type);
         showContextMenu(e, node, parentNode);
     });
     
@@ -335,7 +337,12 @@ let draggedParent = null;
 
 function showContextMenu(e, node, parent) {
     const menu = document.getElementById('context-menu');
-    if (!menu) return;
+    if (!menu) {
+        console.error('Context menu element not found!');
+        return;
+    }
+    
+    console.log('Showing context menu for:', node ? node.name : 'empty area', 'Type:', node ? node.type : 'none');
     
     menu.style.left = e.clientX + 'px';
     menu.style.top = e.clientY + 'px';
@@ -350,27 +357,38 @@ function showContextMenu(e, node, parent) {
     const deleteOpt = document.getElementById('delete-option');
     const renameOpt = document.getElementById('rename-option');
     
+    console.log('Menu elements:', {
+        createFileOpt: !!createFileOpt,
+        createFolderOpt: !!createFolderOpt,
+        copyOpt: !!copyOpt,
+        pasteOpt: !!pasteOpt,
+        deleteOpt: !!deleteOpt,
+        renameOpt: !!renameOpt
+    });
+    
     if (node) {
         if (node.type === 'folder') {
-            if (createFileOpt) createFileOpt.style.display = 'block';
-            if (createFolderOpt) createFolderOpt.style.display = 'block';
+            if (createFileOpt) createFileOpt.style.display = 'flex';
+            if (createFolderOpt) createFolderOpt.style.display = 'flex';
         } else {
             if (createFileOpt) createFileOpt.style.display = 'none';
             if (createFolderOpt) createFolderOpt.style.display = 'none';
         }
-        if (copyOpt) copyOpt.style.display = 'block';
+        if (copyOpt) copyOpt.style.display = 'flex';
         if (pasteOpt) pasteOpt.style.display = 'none';
-        if (deleteOpt) deleteOpt.style.display = 'block';
-        if (renameOpt) renameOpt.style.display = 'block';
+        if (deleteOpt) deleteOpt.style.display = 'flex';
+        if (renameOpt) renameOpt.style.display = 'flex';
     } else {
         // empty
-        if (createFileOpt) createFileOpt.style.display = 'block';
-        if (createFolderOpt) createFolderOpt.style.display = 'block';
+        if (createFileOpt) createFileOpt.style.display = 'flex';
+        if (createFolderOpt) createFolderOpt.style.display = 'flex';
         if (copyOpt) copyOpt.style.display = 'none';
-        if (pasteOpt) pasteOpt.style.display = clipboard ? 'block' : 'none';
+        if (pasteOpt) pasteOpt.style.display = clipboard ? 'flex' : 'none';
         if (deleteOpt) deleteOpt.style.display = 'none';
         if (renameOpt) renameOpt.style.display = 'none';
     }
+    
+    console.log('Context menu displayed at:', e.clientX, e.clientY);
 }
 
 const leftSidebarElement = document.getElementById('left-sidebar');
