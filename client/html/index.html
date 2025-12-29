@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página com Sidebars</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/editor.css">
+</head>
+<body>
+    <div class="container">
+        <aside id="left-sidebar">
+            <!-- Botões sempre visíveis quando collapsed -->
+            <div class="sidebar-icons">
+                <button id="home-icon-btn" class="icon-btn" title="Página Inicial"><i class="fas fa-home"></i></button>
+                <button id="folder-icon-btn" class="icon-btn" title="Explorador de Arquivos"><i class="fas fa-folder"></i></button>
+                <button id="chat-icon-btn" class="icon-btn" title="Chat"><i class="fas fa-comments"></i></button>
+            </div>
+            
+            <!-- Conteúdo do Explorador de Arquivos -->
+            <div id="folder-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Explorador de Arquivos</h3>
+                    <button id="close-sidebar-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="explorer-actions">
+                    <button id="add-folder" class="explorer-btn" title="Nova Pasta"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
+                    <button id="add-file" class="explorer-btn" title="Novo Arquivo"><i class="fas fa-file-plus"></i> Novo Arquivo</button>
+                </div>
+                <ul id="file-tree" class="tree">
+                    <!-- File tree will be populated by JS -->
+                </ul>
+            </div>
+            
+            <!-- Conteúdo do Chat -->
+            <div id="chat-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Chat</h3>
+                    <button id="close-sidebar-btn-chat" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p class="placeholder-text">Funcionalidade em desenvolvimento...</p>
+            </div>
+            
+            <div id="context-menu" class="context-menu">
+                <div id="create-file-option" class="menu-item">Criar Arquivo</div>
+                <div id="create-folder-option" class="menu-item">Criar Pasta</div>
+                <div id="copy-option" class="menu-item">Copiar</div>
+                <div id="paste-option" class="menu-item">Colar</div>
+                <div id="delete-option" class="menu-item">Apagar</div>
+                <div id="rename-option" class="menu-item">Renomear</div>
+            </div>
+        </aside>
+        <main id="main">
+            <header id="header">
+                <div class="header-left">
+                    <img src="../images/logo.png" alt="Logo" class="logo">
+                </div>
+                <div class="header-center">
+                    <input type="search" placeholder="Pesquisar..." class="search-bar">
+                </div>
+                <div class="header-right">
+                    <img src="../images/users3.png" alt="3 Users" class="users-icon">
+                    <img src="../images/user.png" alt="User" class="user-icon">
+                    <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </header>
+            <div id="content">
+                <div id="file-editor" style="display: none;">
+                    <div class="editor-header">
+                        <div class="editor-toolbar">
+                            <div class="toolbar-group">
+                                <button id="btn-bold" class="toolbar-btn" title="Negrito (Ctrl+B)"><i class="fas fa-bold"></i></button>
+                                <button id="btn-italic" class="toolbar-btn" title="Itálico (Ctrl+I)"><i class="fas fa-italic"></i></button>
+                                <button id="btn-underline" class="toolbar-btn" title="Sublinhado (Ctrl+U)"><i class="fas fa-underline"></i></button>
+                                <button id="btn-strikethrough" class="toolbar-btn" title="Tachado"><i class="fas fa-strikethrough"></i></button>
+                                <button id="btn-clear" class="toolbar-btn" title="Limpar Formatação"><i class="fas fa-eraser"></i></button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <select id="font-select" class="toolbar-select" title="Fonte">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Calibri" selected>Calibri</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Verdana">Verdana</option>
+                                </select>
+                                <select id="font-size" class="toolbar-select" title="Tamanho">
+                                    <option value="10">10</option>
+                                    <option value="12" selected>12</option>
+                                    <option value="14">14</option>
+                                    <option value="16">16</option>
+                                    <option value="18">18</option>
+                                    <option value="20">20</option>
+                                    <option value="24">24</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button id="btn-align-left" class="toolbar-btn" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
+                                <button id="btn-align-center" class="toolbar-btn" title="Centralizar"><i class="fas fa-align-center"></i></button>
+                                <button id="btn-align-right" class="toolbar-btn" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button id="btn-ul" class="toolbar-btn" title="Lista com Marcadores"><i class="fas fa-list-ul"></i></button>
+                                <button id="btn-ol" class="toolbar-btn" title="Lista Numerada"><i class="fas fa-list-ol"></i></button>
+                                <div class="toolbar-divider"></div>
+                                <button id="save-file" class="toolbar-btn" title="Salvar"><i class="fas fa-save"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-page">
+                        <div class="pages-container">
+                            <div class="editor-content page" contenteditable="true" id="editor-textarea" spellcheck="true"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="default-content">
+                    <h2>Conteúdo Principal</h2>
+                    <p>Este é o conteúdo principal da página.</p>
+                </div>
+            </div>
+            <footer id="footer">
+                <p>Footer</p>
+            </footer>
+        </main>
+        <aside id="right-sidebar">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat</h2>
+                    <span class="chat-users-count">3 usuários online</span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Mensagens serão adicionadas aqui -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Digite sua mensagem..." maxlength="500">
+                    <button id="send-chat-btn" class="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script src="../js/editor.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html>

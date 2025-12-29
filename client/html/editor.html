@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Texto - Word-like</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/editor.css">
+</head>
+<body>
+    <div id="file-editor">
+        <div class="editor-content" contenteditable="true" id="editor-textarea">
+            <button id="save-file">Salvar</button>
+            <!-- Conteúdo do arquivo será inserido aqui -->
+        </div>
+    </div>
+
+    <script src="../js/editor.js"></script>
+    <script>
+        // Initialize editor when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.Editor && window.Editor.init) {
+                window.Editor.init();
+            }
+        });
+    </script>
+</body>
+</html>
