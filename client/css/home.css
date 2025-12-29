@@ -1,0 +1,639 @@
+/* ===========================
+   HOME PAGE STYLES
+   =========================== */
+
+.home-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header da Home */
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.home-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1C2A39;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+.btn-primary {
+    background: #1C2A39;
+    color: #FFFFFF;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(28, 42, 57, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Filtros (Chips) */
+.filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    background: #F2F2F2;
+    color: #1C2A39;
+    border: 2px solid transparent;
+    padding: 0.625rem 1.25rem;
+    border-radius: 24px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background: #FFFFFF;
+    border-color: #A6A6A6;
+}
+
+.filter-chip.active {
+    background: #1C2A39;
+    color: #FFFFFF;
+    border-color: #1C2A39;
+}
+
+.chip-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.filter-chip.active .chip-count {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Área de Cards */
+.projects-section {
+    position: relative;
+    margin-bottom: 3rem;
+}
+
+.projects-carousel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #A6A6A6 #F2F2F2;
+}
+
+.projects-carousel::-webkit-scrollbar {
+    height: 8px;
+}
+
+.projects-carousel::-webkit-scrollbar-track {
+    background: #F2F2F2;
+    border-radius: 4px;
+}
+
+.projects-carousel::-webkit-scrollbar-thumb {
+    background: #A6A6A6;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.projects-carousel::-webkit-scrollbar-thumb:hover {
+    background: #1C2A39;
+}
+
+/* Card de Projeto */
+.project-card {
+    background: #FFFFFF;
+    border: 1px solid #A6A6A6;
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(28, 42, 57, 0.15);
+    border-color: #1C2A39;
+}
+
+.project-card-header {
+    margin-bottom: 1rem;
+}
+
+.project-card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1C2A39;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.4;
+}
+
+.project-card-description {
+    font-size: 0.9rem;
+    color: #A6A6A6;
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.status-badge.in-progress {
+    background: rgba(40, 199, 111, 0.15);
+    color: #28c76f;
+}
+
+.status-badge.completed {
+    background: rgba(0, 123, 255, 0.15);
+    color: #007bff;
+}
+
+.status-badge.delayed {
+    background: rgba(234, 84, 85, 0.15);
+    color: #ea5455;
+}
+
+/* Barra de Progresso */
+.progress-section {
+    margin-bottom: 1rem;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #A6A6A6;
+}
+
+.progress-percentage {
+    font-weight: 600;
+    color: #1C2A39;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #F2F2F2;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1C2A39 0%, #000000 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Participantes */
+.participants {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1C2A39;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 2px solid #FFFFFF;
+}
+
+.avatar:not(:first-child) {
+    margin-left: -8px;
+}
+
+.more-participants {
+    background: #A6A6A6;
+    font-size: 0.7rem;
+}
+
+/* Última Atividade */
+.last-activity {
+    font-size: 0.8rem;
+    color: #A6A6A6;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #F2F2F2;
+}
+
+/* Setas de Navegação */
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #FFFFFF;
+    border: 2px solid #A6A6A6;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    color: #1C2A39;
+}
+
+.nav-arrow:hover {
+    background: #1C2A39;
+    color: #FFFFFF;
+    border-color: #1C2A39;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.nav-arrow-left {
+    left: -24px;
+}
+
+.nav-arrow-right {
+    right: -24px;
+}
+
+/* Estado Vazio */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 2px dashed #A6A6A6;
+    display: none;
+}
+
+.empty-state.show {
+    display: block;
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: #A6A6A6;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1C2A39;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    color: #A6A6A6;
+    margin-bottom: 2rem;
+}
+
+.btn-primary-large {
+    background: #1C2A39;
+    color: #FFFFFF;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary-large:hover {
+    background: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(28, 42, 57, 0.3);
+}
+
+/* ===========================
+   PROJECT PAGE STYLES
+   =========================== */
+
+.project-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header do Projeto */
+.project-header {
+    background: #FFFFFF;
+    border: 1px solid #A6A6A6;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #1C2A39;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background: #F2F2F2;
+}
+
+.project-title-section {
+    margin-bottom: 1.5rem;
+}
+
+.project-title-section h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1C2A39;
+    margin: 0 0 0.75rem 0;
+}
+
+.project-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.project-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: rgba(40, 199, 111, 0.15);
+    color: #28c76f;
+}
+
+/* Card de Progresso */
+.project-progress-card {
+    background: #F2F2F2;
+    padding: 1.25rem;
+    border-radius: 12px;
+}
+
+.project-progress-card .progress-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.project-progress-card .progress-bar-container {
+    height: 12px;
+}
+
+/* Ações Principais */
+.project-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-btn {
+    background: #FFFFFF;
+    border: 2px solid #A6A6A6;
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1C2A39;
+    transition: all 0.2s ease;
+}
+
+.action-btn i {
+    font-size: 1.5rem;
+}
+
+.action-btn:hover {
+    background: #1C2A39;
+    color: #FFFFFF;
+    border-color: #1C2A39;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(28, 42, 57, 0.2);
+}
+
+/* Seção de Participantes */
+.participants-section {
+    background: #FFFFFF;
+    border: 1px solid #A6A6A6;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.participants-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1C2A39;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.participant-count {
+    font-size: 1rem;
+    color: #A6A6A6;
+    font-weight: 400;
+}
+
+.participants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+/* Card de Participante */
+.participant-card {
+    background: #F2F2F2;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.participant-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.participant-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #1C2A39;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.participant-info h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1C2A39;
+}
+
+.participant-role {
+    font-size: 0.85rem;
+    color: #A6A6A6;
+    margin: 0.25rem 0 0 0;
+}
+
+.participant-progress {
+    margin-top: 0.5rem;
+}
+
+.participant-activity {
+    font-size: 0.8rem;
+    color: #A6A6A6;
+    margin-top: 0.5rem;
+}
+
+/* Seção de Documentos */
+.documents-section {
+    background: #FFFFFF;
+    border: 1px solid #A6A6A6;
+    border-radius: 16px;
+    padding: 2rem;
+}
+
+.documents-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1C2A39;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.empty-documents {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: #A6A6A6;
+}
+
+.empty-documents i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-documents p {
+    margin: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.empty-hint {
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+    .projects-carousel {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .projects-carousel {
+        grid-template-columns: 1fr;
+    }
+    
+    .home-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .filters {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    
+    .nav-arrow {
+        display: none;
+    }
+    
+    .participants-grid {
+        grid-template-columns: 1fr;
+    }
+}

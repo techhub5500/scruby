@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Inicial - Scruby</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <div class="container">
+        <aside id="left-sidebar">
+            <!-- Botões sempre visíveis quando collapsed -->
+            <div class="sidebar-icons">
+                <button id="home-icon-btn" class="icon-btn active" title="Página Inicial"><i class="fas fa-home"></i></button>
+                <button id="folder-icon-btn" class="icon-btn" title="Explorador de Arquivos"><i class="fas fa-folder"></i></button>
+                <button id="chat-icon-btn" class="icon-btn" title="Chat"><i class="fas fa-comments"></i></button>
+            </div>
+            
+            <!-- Conteúdo do Explorador de Arquivos -->
+            <div id="folder-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Explorador de Arquivos</h3>
+                    <button id="close-sidebar-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="explorer-actions">
+                    <button id="add-folder" class="explorer-btn" title="Nova Pasta"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
+                    <button id="add-file" class="explorer-btn" title="Novo Arquivo"><i class="fas fa-file-plus"></i> Novo Arquivo</button>
+                </div>
+                <ul id="file-tree" class="tree">
+                    <!-- File tree will be populated by JS -->
+                </ul>
+            </div>
+            
+            <!-- Conteúdo do Chat -->
+            <div id="chat-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Chat</h3>
+                    <button id="close-sidebar-btn-chat" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p class="placeholder-text">Funcionalidade em desenvolvimento...</p>
+            </div>
+        </aside>
+        <main id="main">
+            <header id="header">
+                <div class="header-left">
+                    <img src="../images/logo.png" alt="Logo" class="logo">
+                </div>
+                <div class="header-center">
+                    <input type="search" placeholder="Pesquisar projetos..." class="search-bar">
+                </div>
+                <div class="header-right">
+                    <img src="../images/users3.png" alt="3 Users" class="users-icon">
+                    <img src="../images/user.png" alt="User" class="user-icon">
+                    <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </header>
+            <div id="content">
+                <div class="home-container">
+                    <div class="home-header">
+                        <h1>Meus Projetos Acadêmicos</h1>
+                        <button id="create-project-btn" class="btn-primary">
+                            <i class="fas fa-plus"></i> Criar Novo Projeto
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="filters">
+                        <button class="filter-chip active" data-filter="all">
+                            Todos <span class="chip-count">0</span>
+                        </button>
+                        <button class="filter-chip" data-filter="in-progress">
+                            🟢 Em andamento <span class="chip-count">0</span>
+                        </button>
+                        <button class="filter-chip" data-filter="completed">
+                            🔵 Concluídos <span class="chip-count">0</span>
+                        </button>
+                        <button class="filter-chip" data-filter="delayed">
+                            🔴 Atrasados <span class="chip-count">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Área de Cards -->
+                    <div class="projects-section">
+                        <button class="nav-arrow nav-arrow-left" id="scroll-left" style="display: none;">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        
+                        <div class="projects-carousel" id="projects-carousel">
+                            <!-- Cards serão inseridos aqui pelo JS -->
+                        </div>
+
+                        <button class="nav-arrow nav-arrow-right" id="scroll-right" style="display: none;">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <!-- Estado Vazio -->
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <h2>Você ainda não participa de nenhum projeto acadêmico</h2>
+                        <p>Comece criando seu primeiro projeto ou aguarde o convite de um colega.</p>
+                        <button class="btn-primary-large" id="create-first-project-btn">
+                            <i class="fas fa-plus"></i> Criar primeiro projeto
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <footer id="footer">
+                <p>Scruby © 2025 - Plataforma de Colaboração Acadêmica</p>
+            </footer>
+        </main>
+        <aside id="right-sidebar">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat</h2>
+                    <span class="chat-users-count">3 usuários online</span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Mensagens serão adicionadas aqui -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Digite sua mensagem..." maxlength="500">
+                    <button id="send-chat-btn" class="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script src="../js/main.js"></script>
+    <script src="../js/home.js"></script>
+</body>
+</html>

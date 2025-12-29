@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto - Scruby</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+    <div class="container">
+        <aside id="left-sidebar">
+            <!-- Botões sempre visíveis quando collapsed -->
+            <div class="sidebar-icons">
+                <button id="home-icon-btn" class="icon-btn" title="Página Inicial"><i class="fas fa-home"></i></button>
+                <button id="folder-icon-btn" class="icon-btn" title="Explorador de Arquivos"><i class="fas fa-folder"></i></button>
+                <button id="chat-icon-btn" class="icon-btn" title="Chat"><i class="fas fa-comments"></i></button>
+            </div>
+            
+            <!-- Conteúdo do Explorador de Arquivos -->
+            <div id="folder-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Explorador de Arquivos</h3>
+                    <button id="close-sidebar-btn" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="explorer-actions">
+                    <button id="add-folder" class="explorer-btn" title="Nova Pasta"><i class="fas fa-folder-plus"></i> Nova Pasta</button>
+                    <button id="add-file" class="explorer-btn" title="Novo Arquivo"><i class="fas fa-file-plus"></i> Novo Arquivo</button>
+                </div>
+                <ul id="file-tree" class="tree">
+                    <!-- File tree will be populated by JS -->
+                </ul>
+            </div>
+            
+            <!-- Conteúdo do Chat -->
+            <div id="chat-content" class="sidebar-content" style="display: none;">
+                <div class="content-header">
+                    <h3>Chat</h3>
+                    <button id="close-sidebar-btn-chat" class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <p class="placeholder-text">Funcionalidade em desenvolvimento...</p>
+            </div>
+        </aside>
+        <main id="main">
+            <header id="header">
+                <div class="header-left">
+                    <img src="../images/logo.png" alt="Logo" class="logo">
+                </div>
+                <div class="header-center">
+                    <input type="search" placeholder="Pesquisar..." class="search-bar">
+                </div>
+                <div class="header-right">
+                    <img src="../images/users3.png" alt="3 Users" class="users-icon">
+                    <img src="../images/user.png" alt="User" class="user-icon">
+                    <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </header>
+            <div id="content">
+                <div class="project-container">
+                    <!-- Header do Projeto -->
+                    <div class="project-header">
+                        <button class="back-btn" id="back-to-home">
+                            <i class="fas fa-arrow-left"></i> Voltar
+                        </button>
+                        <div class="project-title-section">
+                            <h1 id="project-title">Carregando...</h1>
+                            <div class="project-meta">
+                                <span class="project-status-badge" id="project-status">
+                                    🟢 Em andamento
+                                </span>
+                            </div>
+                        </div>
+                        <div class="project-progress-card">
+                            <div class="progress-label">
+                                <span>Progresso Geral</span>
+                                <span class="progress-percentage" id="project-progress-text">0%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar-fill" id="project-progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Principais -->
+                    <div class="project-actions">
+                        <button class="action-btn" id="open-structure-btn">
+                            <i class="fas fa-sitemap"></i>
+                            <span>Abrir estrutura do trabalho</span>
+                        </button>
+                        <button class="action-btn" id="open-documents-btn">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Acessar documentos</span>
+                        </button>
+                    </div>
+
+                    <!-- Seção de Participantes -->
+                    <div class="participants-section">
+                        <h2>
+                            <i class="fas fa-users"></i> Participantes
+                            <span class="participant-count" id="participant-count">(0)</span>
+                        </h2>
+                        <div class="participants-grid" id="participants-grid">
+                            <!-- Participantes serão inseridos aqui pelo JS -->
+                        </div>
+                    </div>
+
+                    <!-- Documentos (vazio por enquanto) -->
+                    <div class="documents-section">
+                        <h2>
+                            <i class="fas fa-file-alt"></i> Documentos do Projeto
+                        </h2>
+                        <div class="empty-documents">
+                            <i class="fas fa-file-invoice"></i>
+                            <p>Nenhum documento foi adicionado ainda.</p>
+                            <p class="empty-hint">Clique em "Acessar documentos" para começar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <footer id="footer">
+                <p>Scruby © 2025 - Plataforma de Colaboração Acadêmica</p>
+            </footer>
+        </main>
+        <aside id="right-sidebar">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Chat do Projeto</h2>
+                    <span class="chat-users-count">3 usuários online</span>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Mensagens serão adicionadas aqui -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Digite sua mensagem..." maxlength="500">
+                    <button id="send-chat-btn" class="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script src="../js/main.js"></script>
+    <script src="../js/project.js"></script>
+</body>
+</html>

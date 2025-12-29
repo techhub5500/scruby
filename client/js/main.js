@@ -443,16 +443,8 @@ document.addEventListener('click', () => {
 
 // Event listeners for sidebar icons
 document.getElementById('home-icon-btn').addEventListener('click', () => {
-    // Close sidebar and go to home
-    closeLeftSidebar();
-    
-    // Close editor if open and show default content
-    if (window.Editor && window.Editor.closeEditor) {
-        window.Editor.closeEditor();
-    }
-    // Ensure default content is visible
-    document.getElementById('default-content').style.display = 'block';
-    document.getElementById('content').classList.remove('editor-open');
+    // Redirecionar para página inicial
+    window.location.href = 'home.html';
 });
 
 document.getElementById('folder-icon-btn').addEventListener('click', () => {

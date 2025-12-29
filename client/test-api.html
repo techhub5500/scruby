@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+        #output {
+            background: #f5f5f5;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Persistência - API FileSystem</h1>
+    
+    <div>
+        <button onclick="testSave()">💾 Salvar Dados de Teste</button>
+        <button onclick="testLoad()">📥 Carregar Dados</button>
+        <button onclick="clearConsole()">🗑️ Limpar Console</button>
+    </div>
+    
+    <div id="output">Console de saída...</div>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api';
+        const USER_ID = 'default-user';
+        const output = document.getElementById('output');
+
+        function log(message) {
+            output.textContent += '\n' + message;
+            console.log(message);
+        }
+
+        function clearConsole() {
+            output.textContent = 'Console limpo...\n';
+        }
+
+        async function testSave() {
+            log('🔵 Iniciando teste de salvamento...');
+            
+            const testData = {
+                name: 'Root',
+                type: 'folder',
+                children: [
+                    {
+                        name: 'Pasta Teste ' + new Date().getTime(),
+                        type: 'folder',
+                        children: []
+                    },
+                    {
+                        name: 'Arquivo Teste.txt',
+                        type: 'file',
+                        content: 'Conteúdo de teste'
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/filesystem/${USER_ID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Dados salvos com sucesso!');
+                    log(JSON.stringify(data, null, 2));
+                } else {
+                    log('❌ Erro ao salvar. Status: ' + response.status);
+                    const errorText = await response.text();
+                    log('Detalhes: ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        async function testLoad() {
+            log('🔵 Iniciando teste de carregamento...');
+            
+            try {
+                const response = await fetch(`${API_URL}/filesystem/${USER_ID}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Dados carregados com sucesso!');
+                    log(JSON.stringify(data, null, 2));
+                } else {
+                    log('❌ Erro ao carregar. Status: ' + response.status);
+                    const errorText = await response.text();
+                    log('Detalhes: ' + errorText);
+                }
+            } catch (error) {
+                log('❌ Erro de conexão: ' + error.message);
+            }
+        }
+
+        // Teste automático ao carregar
+        log('🟢 Página carregada. Testando conexão...');
+        testLoad();
+    </script>
+</body>
+</html>
