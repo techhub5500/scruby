@@ -10,9 +10,192 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/editor.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        .landing-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1C2A39 0%, #2C3E50 100%);
+            padding: 2rem;
+        }
+        
+        .landing-content {
+            text-align: center;
+            color: white;
+            max-width: 600px;
+        }
+        
+        .landing-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 2rem;
+            border-radius: 20px;
+        }
+        
+        .landing-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .landing-content p {
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+        
+        .landing-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .landing-btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .landing-btn-primary {
+            background: white;
+            color: #1C2A39;
+        }
+        
+        .landing-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+        }
+        
+        .landing-btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .landing-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Landing Page -->
+    <div class="landing-container">
+        <div class="landing-content">
+            <img src="../images/logo.png" alt="Scruby Logo" class="landing-logo">
+            <h1>Scruby</h1>
+            <p>Plataforma de Colaboração Acadêmica - Organize e estruture seus projetos acadêmicos de forma inteligente</p>
+            <div class="landing-buttons">
+                <button id="show-login-btn" class="landing-btn landing-btn-primary">Entrar</button>
+                <button id="show-register-btn" class="landing-btn landing-btn-secondary">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div id="login-modal" class="auth-modal">
+        <div class="auth-modal-content">
+            <button class="auth-modal-close" onclick="document.getElementById('login-modal').style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>Entrar</h2>
+            <p>Bem-vindo de volta ao Scruby</p>
+            <div id="login-error" class="auth-error"></div>
+            <form id="login-form">
+                <div class="auth-form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="auth-submit-btn">Entrar</button>
+            </form>
+            <div class="auth-switch">
+                Não tem uma conta? <a href="#" id="switch-to-register">Cadastre-se</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Register Modal -->
+    <div id="register-modal" class="auth-modal">
+        <div class="auth-modal-content">
+            <button class="auth-modal-close" onclick="document.getElementById('register-modal').style.display='none'">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2>Cadastrar</h2>
+            <p>Crie sua conta no Scruby</p>
+            <div id="register-error" class="auth-error"></div>
+            <form id="register-form">
+                <div class="auth-form-group">
+                    <label for="register-name">Nome</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="auth-form-group">
+                    <label for="register-password">Senha</label>
+                    <input type="password" id="register-password" required minlength="6">
+                </div>
+                <div class="auth-form-group">
+                    <label for="register-confirm-password">Confirmar Senha</label>
+                    <input type="password" id="register-confirm-password" required minlength="6">
+                </div>
+                <button type="submit" class="auth-submit-btn">Cadastrar</button>
+            </form>
+            <div class="auth-switch">
+                Já tem uma conta? <a href="#" id="switch-to-login">Entre</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Profile Modal -->
+    <div id="user-profile-modal" class="user-profile-modal">
+        <div class="user-profile-content">
+            <button class="user-profile-close" onclick="document.getElementById('user-profile-modal').classList.remove('show')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="user-profile-header">
+                <div class="user-profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="user-profile-name">Nome do Usuário</h3>
+                <p id="user-profile-username">@username</p>
+            </div>
+            <div class="user-profile-info">
+                <div class="user-info-item">
+                    <span class="user-info-label"><i class="fas fa-id-card"></i> ID:</span>
+                    <span class="user-info-value" id="user-profile-id">123456</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label"><i class="fas fa-envelope"></i> Email:</span>
+                    <span class="user-info-value" id="user-profile-email">email@example.com</span>
+                </div>
+            </div>
+            <button class="user-profile-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+    </div>
+    
+    <!-- Original content hidden -->
+    <div class="container" style="display: none;">
         <aside id="left-sidebar">
             <!-- Botões sempre visíveis quando collapsed -->
             <div class="sidebar-icons">
@@ -63,8 +246,8 @@
                     <input type="search" placeholder="Pesquisar..." class="search-bar">
                 </div>
                 <div class="header-right">
-                    <img src="../images/users3.png" alt="3 Users" class="users-icon">
-                    <img src="../images/user.png" alt="User" class="user-icon">
+                    <i class="fas fa-bell users-icon" title="Notificações"></i>
+                    <img src="../images/user.png" alt="User" class="user-icon" id="user-icon">
                     <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </header>
@@ -149,15 +332,8 @@
             </div>
         </aside>
     </div>
+    <script src="../js/auth.js"></script>
     <script src="../js/editor.js"></script>
     <script src="../js/main.js"></script>
-    <script>
-        // Initialize editor when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.Editor && window.Editor.init) {
-                window.Editor.init();
-            }
-        });
-    </script>
 </body>
 </html>

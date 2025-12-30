@@ -5,7 +5,7 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000; // Força a porta 3000
 
 // Middleware
 app.use(cors());
@@ -22,7 +22,9 @@ mongoose.connect(mongoURI)
 
 // Routes
 const fileSystemRoutes = require('./routes/fileSystem');
+const authRoutes = require('./routes/auth');
 app.use('/api/filesystem', fileSystemRoutes);
+app.use('/api/auth', authRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

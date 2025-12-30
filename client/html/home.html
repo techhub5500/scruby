@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/home.css">
     <link rel="stylesheet" href="../css/editor.css">
+    <link rel="stylesheet" href="../css/auth.css">
 </head>
 <body>
     <div class="container">
@@ -64,8 +65,12 @@
                     <input type="search" placeholder="Pesquisar projetos..." class="search-bar">
                 </div>
                 <div class="header-right">
-                    <img src="../images/users3.png" alt="3 Users" class="users-icon">
-                    <img src="../images/user.png" alt="User" class="user-icon">
+                    <span class="user-display-name" style="margin-right: 1rem; color: #1C2A39; font-weight: 600;"></span>
+                    <i class="fas fa-bell users-icon" title="Notificações"></i>
+                    <img src="../images/user.png" alt="User" class="user-icon" id="user-icon">
+                    <button id="logout-btn" class="header-btn" title="Sair" style="margin-left: 0.5rem;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
                     <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </header>
@@ -216,6 +221,36 @@
         </div>
     </div>
     
+    <!-- User Profile Modal -->
+    <div id="user-profile-modal" class="user-profile-modal">
+        <div class="user-profile-content">
+            <button class="user-profile-close" onclick="document.getElementById('user-profile-modal').classList.remove('show')">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="user-profile-header">
+                <div class="user-profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 id="user-profile-name">Nome do Usuário</h3>
+                <p id="user-profile-username">@username</p>
+            </div>
+            <div class="user-profile-info">
+                <div class="user-info-item">
+                    <span class="user-info-label"><i class="fas fa-id-card"></i> ID:</span>
+                    <span class="user-info-value" id="user-profile-id">123456</span>
+                </div>
+                <div class="user-info-item">
+                    <span class="user-info-label"><i class="fas fa-envelope"></i> Email:</span>
+                    <span class="user-info-value" id="user-profile-email">email@example.com</span>
+                </div>
+            </div>
+            <button class="user-profile-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+    </div>
+    
+    <script src="../js/auth.js"></script>
     <script src="../js/main.js"></script>
     <script src="../js/editor.js"></script>
     <script src="../js/home.js"></script>
