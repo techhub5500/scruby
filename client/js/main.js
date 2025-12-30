@@ -114,7 +114,7 @@ document.addEventListener('mouseup', () => {
 });
 
 // File system
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://localhost:3000/api';
 const USER_ID = 'default-user'; // Por enquanto um usuário padrão
 
 // Expose globally for editor.js
@@ -576,20 +576,47 @@ if (window.Editor && window.Editor.init) {
     window.Editor.init();
 }
 
-// Function to open file in editor - handles both direct call and Editor availability
+// Function to close editor and return to previous view
+function closeEditor() {
+    const fileEditor = document.getElementById('file-editor');
+    const homeContainer = document.querySelector('.home-container');
+    const projectContainer = document.querySelector('.project-container');
+    
+    if (fileEditor) {
+        fileEditor.style.display = 'none';
+    }
+    
+    if (homeContainer) {
+        homeContainer.style.display = 'block';
+    }
+    if (projectContainer) {
+        projectContainer.style.display = 'block';
+    }
+}
 function openFileInEditor(file) {
     console.log('openFileInEditor called with:', file);
     
-    // Check if we're on the correct page (index.html with editor)
+    // Check if file-editor exists
     const fileEditor = document.getElementById('file-editor');
     
     if (!fileEditor) {
-        console.log('Not on index.html page, redirecting...');
-        // Store file info in sessionStorage and redirect to index.html
-        sessionStorage.setItem('fileToOpen', JSON.stringify(file));
-        window.location.href = 'index.html';
+        console.log('File editor not found, cannot open');
         return;
     }
+    
+    // Hide current content
+    const homeContainer = document.querySelector('.home-container');
+    const projectContainer = document.querySelector('.project-container');
+    
+    if (homeContainer) {
+        homeContainer.style.display = 'none';
+    }
+    if (projectContainer) {
+        projectContainer.style.display = 'none';
+    }
+    
+    // Show editor
+    fileEditor.style.display = 'block';
     
     // Check if Editor is available
     if (window.Editor && typeof window.Editor.openFileEditor === 'function') {
@@ -695,6 +722,14 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             openFileInEditor(file);
         }, 500);
+    }
+    
+    // Add close editor button listener
+    const closeEditorBtn = document.getElementById('close-editor');
+    if (closeEditorBtn) {
+        closeEditorBtn.addEventListener('click', () => {
+            closeEditor();
+        });
     }
 });
 

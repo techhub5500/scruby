@@ -3,7 +3,7 @@
 // ===========================
 
 // Dados mock de projetos
-let projects = [
+let projects = JSON.parse(localStorage.getItem('projects')) || [
     {
         id: 1,
         title: "Aplicações Clínicas da Biomedicina Molecular",
@@ -70,6 +70,11 @@ let projects = [
     }
 ];
 
+// Salvar projetos iniciais se não existirem
+if (!localStorage.getItem('projects')) {
+    localStorage.setItem('projects', JSON.stringify(projects));
+}
+
 let currentFilter = 'all';
 
 // Inicialização
@@ -111,6 +116,36 @@ function setupEventListeners() {
     if (homeBtn) {
         homeBtn.addEventListener('click', () => {
             window.location.href = 'home.html';
+        });
+    }
+    
+    // Modal Chat
+    const modalOverlay = document.getElementById('chat-modal');
+    const modalSendBtn = document.getElementById('modal-send-chat-btn');
+    const modalInput = document.getElementById('modal-chat-input');
+    
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
+        });
+    }
+    
+    if (modalSendBtn) {
+        modalSendBtn.addEventListener('click', sendModalMessage);
+    }
+    
+    if (modalInput) {
+        modalInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendModalMessage();
+            }
+        });
+        
+        modalInput.addEventListener('input', () => {
+            autoResizeTextarea(modalInput);
         });
     }
 }
@@ -193,7 +228,10 @@ function createProjectCard(project) {
     
     card.innerHTML = `
         <div class="project-card-header">
-            <h3 class="project-card-title">${project.title}</h3>
+            <div class="project-card-title-section">
+                <h3 class="project-card-title">${project.title}</h3>
+                <span class="delete-project" data-project-id="${project.id}">apagar</span>
+            </div>
             <p class="project-card-description">${project.description}</p>
         </div>
         <span class="status-badge ${statusClass}">${statusEmoji} ${statusText}</span>
@@ -214,6 +252,13 @@ function createProjectCard(project) {
         </div>
     `;
     
+    // Adicionar evento de clique para apagar
+    const deleteBtn = card.querySelector('.delete-project');
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteProject(project.id);
+    });
+    
     // Adicionar evento de clique
     card.addEventListener('click', () => {
         openProject(project.id);
@@ -228,6 +273,21 @@ function openProject(projectId) {
     localStorage.setItem('currentProjectId', projectId);
     // Redirecionar para página do projeto
     window.location.href = `project.html?id=${projectId}`;
+}
+
+// Apagar projeto
+function deleteProject(projectId) {
+    if (confirm('Tem certeza que deseja apagar este projeto?')) {
+        // Remover do array
+        projects = projects.filter(p => p.id !== projectId);
+        
+        // Salvar no localStorage
+        localStorage.setItem('projects', JSON.stringify(projects));
+        
+        // Atualizar interface
+        updateFilterCounts();
+        renderProjects();
+    }
 }
 
 // Filtros
@@ -295,7 +355,26 @@ function updateNavigationArrows() {
 
 // Criar novo projeto (placeholder)
 function createProject() {
-    alert('Funcionalidade de criar projeto em desenvolvimento!\n\nEm breve você poderá criar novos projetos acadêmicos.');
+    const modal = document.getElementById('chat-modal');
+    modal.style.display = 'flex';
+    
+    // Reset modal state
+    const messagesContainer = document.getElementById('modal-chat-messages');
+    messagesContainer.innerHTML = `
+        <div class="project-description-prompt">
+            <h3>Descreva seu projeto acadêmico</h3>
+            <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+        </div>
+    `;
+    
+    const input = document.getElementById('modal-chat-input');
+    input.value = '';
+    input.style.height = 'auto';
+    
+    // Focar no input
+    setTimeout(() => {
+        input.focus();
+    }, 100);
 }
 
 // Listener para resize
@@ -303,3 +382,100 @@ window.addEventListener('resize', updateNavigationArrows);
 
 // Exportar projetos para uso em outras páginas
 window.projectsData = projects;
+
+// Função para enviar mensagem no modal
+function sendModalMessage() {
+    const input = document.getElementById('modal-chat-input');
+    const messagesContainer = document.getElementById('modal-chat-messages');
+    
+    if (!input || !input.value.trim()) return;
+    
+    const projectDescription = input.value.trim();
+    
+    // Esconder o prompt e mostrar mensagem de processamento
+    messagesContainer.innerHTML = `
+        <div class="processing-message">
+            <div class="processing-icon">
+                <i class="fas fa-cog fa-spin"></i>
+            </div>
+            <h3>Processando sua descrição...</h3>
+            <p>Estamos estruturando seu projeto acadêmico baseado na descrição fornecida.</p>
+        </div>
+    `;
+    
+    // Simular processamento
+    setTimeout(() => {
+        // Criar projeto baseado na descrição
+        const projectTitle = generateProjectTitle(projectDescription);
+        
+        const newProject = {
+            id: Date.now(),
+            title: projectTitle,
+            description: projectDescription.substring(0, 150) + (projectDescription.length > 150 ? '...' : ''),
+            status: 'in-progress',
+            progress: 10,
+            participants: [
+                { name: 'Você', initials: 'VC' }
+            ],
+            lastActivity: 'agora'
+        };
+        
+        // Adicionar ao array de projetos
+        projects.push(newProject);
+        
+        // Salvar no localStorage
+        localStorage.setItem('projects', JSON.stringify(projects));
+        
+        // Atualizar interface
+        updateFilterCounts();
+        renderProjects();
+        
+        // Fechar modal
+        document.getElementById('chat-modal').style.display = 'none';
+        
+        // Resetar modal para próximo uso
+        setTimeout(() => {
+            messagesContainer.innerHTML = `
+                <div class="project-description-prompt">
+                    <h3>Descreva seu projeto acadêmico</h3>
+                    <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+                </div>
+            `;
+            input.value = '';
+        }, 500);
+        
+        // Mostrar confirmação
+        alert(`Projeto "${projectTitle}" criado com sucesso!`);
+    }, 3000); // 3 segundos de processamento
+}
+
+// Função auxiliar para gerar título baseado na descrição
+function generateProjectTitle(description) {
+    // Lógica simples para extrair um título da descrição
+    const words = description.split(' ');
+    if (words.length > 5) {
+        return words.slice(0, 5).join(' ') + '...';
+    }
+    return description;
+}
+
+// Função para auto-resize do textarea
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    const scrollHeight = textarea.scrollHeight;
+    const maxHeight = 120; // 250% da altura original aproximada
+    const newHeight = Math.min(scrollHeight, maxHeight);
+    textarea.style.height = newHeight + 'px';
+}
+
+// Função para esconder o prompt quando o usuário começar a digitar
+function hidePromptIfNeeded() {
+    const input = document.getElementById('modal-chat-input');
+    const prompt = document.querySelector('.project-description-prompt');
+    
+    if (input && input.value.trim() && prompt) {
+        prompt.style.display = 'none';
+    } else if (input && !input.value.trim() && prompt) {
+        prompt.style.display = 'flex';
+    }
+}

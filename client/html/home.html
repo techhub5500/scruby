@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/home.css">
+    <link rel="stylesheet" href="../css/editor.css">
 </head>
 <body>
     <div class="container">
@@ -43,6 +44,15 @@
                     <button id="close-sidebar-btn-chat" class="close-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <p class="placeholder-text">Funcionalidade em desenvolvimento...</p>
+            </div>
+            
+            <div id="context-menu" class="context-menu">
+                <div id="create-file-option" class="menu-item" title="Criar Arquivo">Criar Arquivo</div>
+                <div id="create-folder-option" class="menu-item" title="Criar Pasta">Criar Pasta</div>
+                <div id="copy-option" class="menu-item" title="Copiar">Copiar</div>
+                <div id="paste-option" class="menu-item" title="Colar">Colar</div>
+                <div id="delete-option" class="menu-item" title="Apagar">Apagar</div>
+                <div id="rename-option" class="menu-item" title="Renomear">Renomear</div>
             </div>
         </aside>
         <main id="main">
@@ -111,6 +121,61 @@
                         </button>
                     </div>
                 </div>
+                <div id="file-editor" style="display: none;">
+                    <div class="editor-header">
+                        <div class="editor-toolbar">
+                            <div class="toolbar-group">
+                                <button id="close-editor" class="toolbar-btn" title="Fechar Editor"><i class="fas fa-times"></i></button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button id="btn-bold" class="toolbar-btn" title="Negrito (Ctrl+B)"><i class="fas fa-bold"></i></button>
+                                <button id="btn-italic" class="toolbar-btn" title="Itálico (Ctrl+I)"><i class="fas fa-italic"></i></button>
+                                <button id="btn-underline" class="toolbar-btn" title="Sublinhado (Ctrl+U)"><i class="fas fa-underline"></i></button>
+                                <button id="btn-strikethrough" class="toolbar-btn" title="Tachado"><i class="fas fa-strikethrough"></i></button>
+                                <button id="btn-clear" class="toolbar-btn" title="Limpar Formatação"><i class="fas fa-eraser"></i></button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <select id="font-select" class="toolbar-select" title="Fonte">
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Calibri" selected>Calibri</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Verdana">Verdana</option>
+                                </select>
+                                <select id="font-size" class="toolbar-select" title="Tamanho">
+                                    <option value="10">10</option>
+                                    <option value="12" selected>12</option>
+                                    <option value="14">14</option>
+                                    <option value="16">16</option>
+                                    <option value="18">18</option>
+                                    <option value="20">20</option>
+                                    <option value="24">24</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button id="btn-align-left" class="toolbar-btn" title="Alinhar à Esquerda"><i class="fas fa-align-left"></i></button>
+                                <button id="btn-align-center" class="toolbar-btn" title="Centralizar"><i class="fas fa-align-center"></i></button>
+                                <button id="btn-align-right" class="toolbar-btn" title="Alinhar à Direita"><i class="fas fa-align-right"></i></button>
+                            </div>
+                            <div class="toolbar-divider"></div>
+                            <div class="toolbar-group">
+                                <button id="btn-ul" class="toolbar-btn" title="Lista com Marcadores"><i class="fas fa-list-ul"></i></button>
+                                <button id="btn-ol" class="toolbar-btn" title="Lista Numerada"><i class="fas fa-list-ol"></i></button>
+                                <div class="toolbar-divider"></div>
+                                <button id="save-file" class="toolbar-btn" title="Salvar"><i class="fas fa-save"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-page">
+                        <div class="pages-container">
+                            <div class="editor-content page" contenteditable="true" id="editor-textarea" spellcheck="true"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <footer id="footer">
                 <p>Scruby © 2025 - Plataforma de Colaboração Acadêmica</p>
@@ -132,7 +197,27 @@
             </div>
         </aside>
     </div>
+    
+    <!-- Modal de Chat -->
+    <div id="chat-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-chat-container">
+                <div class="chat-messages" id="modal-chat-messages">
+                    <div class="project-description-prompt">
+                        <h3>Descreva seu projeto acadêmico</h3>
+                        <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <textarea id="modal-chat-input" class="chat-input" maxlength="2000" rows="1"></textarea>
+                    <button id="modal-send-chat-btn" class="send-chat-btn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="../js/main.js"></script>
+    <script src="../js/editor.js"></script>
     <script src="../js/home.js"></script>
 </body>
 </html>
