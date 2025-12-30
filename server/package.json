@@ -5,9 +5,13 @@
   "main": "serverOperacional.js",
   "scripts": {
     "start": "node serverOperacional.js",
-    "dev": "nodemon serverOperacional.js"
+    "dev": "nodemon serverOperacional.js",
+    "agent": "node agentServer.js",
+    "agent:dev": "nodemon agentServer.js",
+    "start:all": "concurrently \"npm run dev\" \"npm run agent:dev\" --names \"SERVER,AGENT\" --prefix-colors \"cyan,magenta\""
   },
   "dependencies": {
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
@@ -16,6 +20,7 @@
     "mongoose": "^8.0.3"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "nodemon": "^3.0.2"
   }
 }

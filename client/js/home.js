@@ -383,8 +383,15 @@ window.addEventListener('resize', updateNavigationArrows);
 // Exportar projetos para uso em outras páginas
 window.projectsData = projects;
 
-// Função para enviar mensagem no modal
-function sendModalMessage() {
+// ===========================
+// NOVA FUNÇÃO COM IA - Usando DeepSeek
+// ===========================
+
+// URL do servidor do agente
+const AGENT_API_URL = 'http://localhost:3001/api/agent';
+
+// Função para enviar mensagem no modal (NOVA - com IA)
+async function sendModalMessage() {
     const input = document.getElementById('modal-chat-input');
     const messagesContainer = document.getElementById('modal-chat-messages');
     
@@ -398,14 +405,159 @@ function sendModalMessage() {
             <div class="processing-icon">
                 <i class="fas fa-cog fa-spin"></i>
             </div>
+            <h3>🤖 Processando com IA...</h3>
+            <p>O agente DeepSeek está analisando sua descrição e criando o projeto acadêmico estruturado. Isso pode levar alguns segundos...</p>
+        </div>
+    `;
+    
+    try {
+        // Chamar API do agente
+        console.log('🚀 Enviando descrição para o agente de IA...');
+        
+        const response = await fetch(`${AGENT_API_URL}/process-project`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: projectDescription
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Erro ao processar projeto');
+        }
+
+        const data = await response.json();
+        console.log('✅ Projeto criado pela IA:', data);
+
+        // Criar projeto com os dados da IA
+        const newProject = {
+            id: data.project.id,
+            title: data.project.title,
+            description: data.project.description,
+            fullDescription: data.project.fullDescription,
+            status: data.project.status,
+            progress: data.project.progress,
+            participants: data.project.participants,
+            structure: data.project.structure,
+            lastActivity: data.project.lastActivity
+        };
+        
+        // Adicionar ao array de projetos
+        projects.push(newProject);
+        
+        // Salvar no localStorage
+        localStorage.setItem('projects', JSON.stringify(projects));
+        
+        // Atualizar interface
+        updateFilterCounts();
+        renderProjects();
+        
+        // Mostrar mensagem de sucesso
+        messagesContainer.innerHTML = `
+            <div class="success-message">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>✨ Projeto Criado com Sucesso!</h3>
+                <div class="project-preview">
+                    <h4>📌 ${newProject.title}</h4>
+                    <p>${newProject.description}</p>
+                    ${newProject.structure ? `
+                        <div class="structure-preview">
+                            <strong>📚 Estrutura Sugerida:</strong>
+                            <ul>
+                                ${newProject.structure.sections.map(s => `<li>${s.name}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+                <button id="close-success-btn" class="success-btn">Ver Projeto</button>
+            </div>
+        `;
+        
+        // Adicionar listener para fechar
+        setTimeout(() => {
+            const closeBtn = document.getElementById('close-success-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    document.getElementById('chat-modal').style.display = 'none';
+                    // Resetar modal
+                    setTimeout(() => {
+                        messagesContainer.innerHTML = `
+                            <div class="project-description-prompt">
+                                <h3>Descreva seu projeto acadêmico</h3>
+                                <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+                            </div>
+                        `;
+                        input.value = '';
+                        input.style.height = 'auto';
+                    }, 300);
+                });
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Erro ao criar projeto:', error);
+        
+        // Mostrar mensagem de erro
+        messagesContainer.innerHTML = `
+            <div class="error-message">
+                <div class="error-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h3>❌ Erro ao Processar</h3>
+                <p>${error.message}</p>
+                <p class="error-hint">Verifique se o servidor do agente está rodando na porta 3001</p>
+                <button id="retry-btn" class="retry-btn">Tentar Novamente</button>
+            </div>
+        `;
+        
+        // Adicionar listener para retry
+        setTimeout(() => {
+            const retryBtn = document.getElementById('retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    messagesContainer.innerHTML = `
+                        <div class="project-description-prompt">
+                            <h3>Descreva seu projeto acadêmico</h3>
+                            <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+                        </div>
+                    `;
+                });
+            }
+        }, 100);
+    }
+}
+
+// ===========================
+// FUNÇÃO ANTIGA (DESCONTINUADA)
+// ===========================
+/*
+function sendModalMessage_OLD() {
+    // Esta função foi descontinuada e substituída pela versão com IA acima
+    // Mantida aqui apenas para referência histórica
+    
+    const input = document.getElementById('modal-chat-input');
+    const messagesContainer = document.getElementById('modal-chat-messages');
+    
+    if (!input || !input.value.trim()) return;
+    
+    const projectDescription = input.value.trim();
+    
+    messagesContainer.innerHTML = `
+        <div class="processing-message">
+            <div class="processing-icon">
+                <i class="fas fa-cog fa-spin"></i>
+            </div>
             <h3>Processando sua descrição...</h3>
             <p>Estamos estruturando seu projeto acadêmico baseado na descrição fornecida.</p>
         </div>
     `;
     
-    // Simular processamento
     setTimeout(() => {
-        // Criar projeto baseado na descrição
         const projectTitle = generateProjectTitle(projectDescription);
         
         const newProject = {
@@ -420,20 +572,12 @@ function sendModalMessage() {
             lastActivity: 'agora'
         };
         
-        // Adicionar ao array de projetos
         projects.push(newProject);
-        
-        // Salvar no localStorage
         localStorage.setItem('projects', JSON.stringify(projects));
-        
-        // Atualizar interface
         updateFilterCounts();
         renderProjects();
-        
-        // Fechar modal
         document.getElementById('chat-modal').style.display = 'none';
         
-        // Resetar modal para próximo uso
         setTimeout(() => {
             messagesContainer.innerHTML = `
                 <div class="project-description-prompt">
@@ -444,10 +588,10 @@ function sendModalMessage() {
             input.value = '';
         }, 500);
         
-        // Mostrar confirmação
         alert(`Projeto "${projectTitle}" criado com sucesso!`);
-    }, 3000); // 3 segundos de processamento
+    }, 3000);
 }
+*/
 
 // Função auxiliar para gerar título baseado na descrição
 function generateProjectTitle(description) {
