@@ -67,9 +67,20 @@ router.get('/user/:userId', async (req, res) => {
  */
 router.post('/invite', async (req, res) => {
     try {
-        const { projectId, projectTitle, fromUserId, toUserId, projectDescription } = req.body;
+        const { 
+            projectId, 
+            projectTitle, 
+            fromUserId, 
+            toUserId, 
+            projectDescription,
+            projectStructure,
+            fullDescription,
+            estimatedPages,
+            suggestedDeadline
+        } = req.body;
         
         console.log('📨 Enviando convite:', { projectId, projectTitle, fromUserId, toUserId });
+        console.log('📊 Estrutura do projeto incluída:', !!projectStructure);
         
         // Validações
         if (!projectId || !projectTitle || !fromUserId || !toUserId) {
@@ -108,12 +119,16 @@ router.post('/invite', async (req, res) => {
             });
         }
         
-        // Criar convite
+        // Criar convite COM estrutura completa
         const invitation = {
             id: Date.now().toString(),
             projectId,
             projectTitle,
             projectDescription: projectDescription || '',
+            projectStructure: projectStructure || null,
+            fullDescription: fullDescription || projectDescription,
+            estimatedPages: estimatedPages || null,
+            suggestedDeadline: suggestedDeadline || null,
             fromUserId,
             fromUserName: fromUserName,
             toUserId,
@@ -144,7 +159,7 @@ router.post('/invite', async (req, res) => {
         
         notifications.push(notification);
         
-        console.log('✅ Convite enviado com sucesso');
+        console.log('✅ Convite enviado com sucesso (incluindo estrutura)');
         
         res.json({
             success: true,
@@ -406,6 +421,10 @@ router.get('/projects/:userId', async (req, res) => {
                 projectId: inv.projectId,
                 projectTitle: inv.projectTitle,
                 projectDescription: inv.projectDescription,
+                projectStructure: inv.projectStructure || null,
+                fullDescription: inv.fullDescription || inv.projectDescription,
+                estimatedPages: inv.estimatedPages || null,
+                suggestedDeadline: inv.suggestedDeadline || null,
                 sharedBy: inv.fromUserName,
                 sharedAt: inv.acceptedAt
             }))

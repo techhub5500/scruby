@@ -602,7 +602,7 @@ async function sendModalMessage() {
         
         // Enviar convites aos colaboradores (se houver)
         if (selectedCollaborators.length > 0) {
-            await sendCollaboratorInvites(newProject.id, newProject.title, newProject.description);
+            await sendCollaboratorInvites(newProject.id, newProject.title, newProject.description, newProject);
         }
         
         // Limpar lista de colaboradores selecionados
@@ -1035,9 +1035,10 @@ function renderAddedCollaborators() {
 }
 
 // Enviar convites para colaboradores
-async function sendCollaboratorInvites(projectId, projectTitle, projectDescription) {
+async function sendCollaboratorInvites(projectId, projectTitle, projectDescription, fullProject) {
     console.log('🚀 [DEBUG] sendCollaboratorInvites chamada');
     console.log('🚀 [DEBUG] selectedCollaborators:', selectedCollaborators);
+    console.log('🚀 [DEBUG] fullProject com estrutura:', fullProject);
     
     if (selectedCollaborators.length === 0) {
         console.log('⚠️ [DEBUG] Nenhum colaborador selecionado');
@@ -1078,7 +1079,11 @@ async function sendCollaboratorInvites(projectId, projectTitle, projectDescripti
                     projectTitle,
                     projectDescription,
                     fromUserId: userId,
-                    toUserId: collaborator.id
+                    toUserId: collaborator.id,
+                    projectStructure: fullProject?.structure || null,
+                    fullDescription: fullProject?.fullDescription || projectDescription,
+                    estimatedPages: fullProject?.structure?.estimatedPages || null,
+                    suggestedDeadline: fullProject?.structure?.suggestedDeadline || null
                 })
             });
             
@@ -1164,11 +1169,13 @@ window.loadAllProjects = async function loadAllProjects() {
                 }
                 
                 if (!existingProject) {
-                    // Adicionar projeto compartilhado com todos os participantes
+                    // Adicionar projeto compartilhado com todos os participantes E estrutura completa
                     const newProject = {
                         id: sharedProject.projectId,
                         title: sharedProject.projectTitle,
                         description: sharedProject.projectDescription,
+                        fullDescription: sharedProject.fullDescription || sharedProject.projectDescription,
+                        structure: sharedProject.projectStructure || null,
                         status: 'in-progress',
                         progress: 10,
                         participants: allParticipants,
@@ -1179,10 +1186,12 @@ window.loadAllProjects = async function loadAllProjects() {
                     projects.push(newProject);
                     console.log(`✅ Projeto "${newProject.title}" adicionado com ${allParticipants.length} participante(s)`);
                 } else {
-                    // Atualizar participantes do projeto existente
+                    // Atualizar participantes e estrutura do projeto existente
                     existingProject.isShared = true;
                     existingProject.participants = allParticipants;
-                    console.log(`🔄 Projeto "${existingProject.title}" atualizado com ${allParticipants.length} participante(s)`);
+                    existingProject.structure = sharedProject.projectStructure || existingProject.structure;
+                    existingProject.fullDescription = sharedProject.fullDescription || existingProject.fullDescription;
+                    console.log(`🔄 Projeto "${existingProject.title}" atualizado com ${allParticipants.length} participante(s) e estrutura`);
                 }
             }
             
