@@ -612,39 +612,131 @@ async function sendModalMessage() {
         updateFilterCounts();
         renderProjects();
         
-        // Mostrar mensagem de sucesso
+        // Mostrar dashboard de sucesso
         messagesContainer.innerHTML = `
-            <div class="success-message">
-                <div class="success-icon">
-                    <i class="fas fa-check-circle"></i>
+            <div class="success-dashboard">
+                <!-- Header -->
+                <div class="dashboard-header">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h2>🎉 Projeto Criado com Sucesso!</h2>
+                    <p>Seu projeto foi estruturado pela IA e está pronto para começar</p>
                 </div>
-                <h3>✨ Projeto Criado com Sucesso!</h3>
-                <div class="project-preview">
-                    <h4>📌 ${newProject.title}</h4>
-                    <p>${newProject.description}</p>
-                    ${newProject.structure && newProject.structure.categories ? `
-                        <div class="structure-preview">
-                            <strong>📚 Estrutura Sugerida:</strong>
-                            <ul>
-                                ${newProject.structure.categories.map(c => `<li><strong>${c.name}</strong> - ${c.assignedTo}</li>`).join('')}
-                            </ul>
-                            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
-                                ${newProject.structure.workloadDistribution || ''}
-                            </p>
+                
+                <!-- Dashboard Cards -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-icon blue">
+                            <i class="fas fa-users"></i>
                         </div>
-                    ` : ''}
+                        <div class="card-title">Participantes</div>
+                        <div class="card-value">${allParticipants.length}</div>
+                        <div class="card-subtitle">${allParticipants.map(p => p.name).join(', ')}</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-icon purple">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="card-title">Categorias</div>
+                        <div class="card-value">${newProject.structure?.categories?.length || 0}</div>
+                        <div class="card-subtitle">Divididas entre os membros</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-icon green">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="card-title">Tarefas</div>
+                        <div class="card-value">${newProject.structure?.categories?.reduce((sum, c) => sum + (c.subcategories?.length || 0), 0) || 0}</div>
+                        <div class="card-subtitle">Subcategorias para organizar</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-icon orange">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <div class="card-title">Páginas Estimadas</div>
+                        <div class="card-value">${newProject.structure?.estimatedPages || '15-20'}</div>
+                        <div class="card-subtitle">Baseado no escopo</div>
+                    </div>
                 </div>
-                <button id="close-success-btn" class="success-btn">Ver Projeto</button>
+                
+                ${newProject.structure?.workloadDistribution ? `
+                    <div class="workload-info">
+                        <h4><i class="fas fa-balance-scale"></i> Distribuição de Carga</h4>
+                        <p>${newProject.structure.workloadDistribution}</p>
+                    </div>
+                ` : ''}
+                
+                ${newProject.structure?.categories ? `
+                    <div class="structure-section">
+                        <h3><i class="fas fa-sitemap"></i> Estrutura do Projeto</h3>
+                        <div class="categories-grid">
+                            ${newProject.structure.categories.map((category, idx) => {
+                                const colors = [
+                                    'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                    'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                                    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                    'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                    'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
+                                    'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                                    'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                    'linear-gradient(135deg, #84cc16 0%, #65a30d 100%)'
+                                ];
+                                const color = colors[idx % colors.length];
+                                
+                                return `
+                                    <div class="category-item">
+                                        <div class="category-header">
+                                            <div class="category-icon-badge" style="background: ${color};">
+                                                <i class="fas fa-folder"></i>
+                                            </div>
+                                            <div class="category-info">
+                                                <h4>${category.name}</h4>
+                                                <span class="assigned-badge">
+                                                    <i class="fas fa-user"></i> ${category.assignedTo}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        ${category.description ? `<p class="category-description">${category.description}</p>` : ''}
+                                        ${category.subcategories && category.subcategories.length > 0 ? `
+                                            <div class="subcategories-list">
+                                                <strong>📋 ${category.subcategories.length} Tarefas:</strong>
+                                                ${category.subcategories.map(sub => `
+                                                    <span class="subcategory-badge">${sub.name || sub}</span>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <!-- Action Buttons -->
+                <div class="dashboard-action">
+                    <button id="close-dashboard-btn" class="dashboard-btn dashboard-btn-secondary">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                    <button id="view-project-btn" class="dashboard-btn dashboard-btn-primary">
+                        <i class="fas fa-arrow-right"></i> Ver Projeto
+                    </button>
+                </div>
             </div>
         `;
         
-        // Adicionar listener para fechar
+        // Adicionar listeners para os botões
         setTimeout(() => {
-            const closeBtn = document.getElementById('close-success-btn');
+            const closeBtn = document.getElementById('close-dashboard-btn');
+            const viewBtn = document.getElementById('view-project-btn');
+            
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
                     document.getElementById('chat-modal').style.display = 'none';
-                    // Resetar modal e limpar colaboradores
+                    // Resetar modal
                     selectedCollaborators = [];
                     setTimeout(() => {
                         messagesContainer.innerHTML = `
@@ -656,6 +748,14 @@ async function sendModalMessage() {
                         input.value = '';
                         input.style.height = 'auto';
                     }, 300);
+                });
+            }
+            
+            if (viewBtn) {
+                viewBtn.addEventListener('click', () => {
+                    document.getElementById('chat-modal').style.display = 'none';
+                    // Navegar para a página do projeto
+                    window.location.href = `project.html?id=${newProject.id}`;
                 });
             }
         }, 100);
