@@ -46,15 +46,22 @@ const projectSchema = new mongoose.Schema({
         name: String,
         initials: String,
         role: String,
-        progress: Number
+        progress: Number,
+        userId: String
     }],
     structure: {
-        sections: [{
+        categories: [{
             name: String,
-            description: String
+            assignedTo: String,
+            description: String,
+            subcategories: [{
+                name: String,
+                description: String
+            }]
         }],
         estimatedPages: Number,
-        suggestedDeadline: String
+        suggestedDeadline: String,
+        workloadDistribution: String
     },
     createdAt: { type: Date, default: Date.now },
     lastActivity: String
@@ -81,7 +88,7 @@ app.get('/health', (req, res) => {
 // Rota para processar descrição do projeto com IA
 app.post('/api/agent/process-project', async (req, res) => {
     try {
-        const { description } = req.body;
+        const { description, participantCount, participants } = req.body;
 
         if (!description || description.trim() === '') {
             return res.status(400).json({ 
@@ -91,9 +98,13 @@ app.post('/api/agent/process-project', async (req, res) => {
 
         console.log('\n🚀 Nova requisição de processamento de projeto');
         console.log('📝 Descrição:', description.substring(0, 100) + '...');
+        console.log('👥 Participantes:', participantCount || 1);
+        if (participants && participants.length > 0) {
+            console.log('📋 Lista de participantes:', participants.map(p => p.name).join(', '));
+        }
 
-        // Processar com IA
-        const aiResult = await processProjectWithAI(description);
+        // Processar com IA (incluindo informações dos participantes)
+        const aiResult = await processProjectWithAI(description, participantCount || 1, participants || []);
 
         // Criar objeto do projeto
         const projectData = {
@@ -102,7 +113,13 @@ app.post('/api/agent/process-project', async (req, res) => {
             fullDescription: description,
             status: 'in-progress',
             progress: 5,
-            participants: [
+            participants: participants && participants.length > 0 ? participants.map(p => ({
+                name: p.name,
+                initials: p.name.split(' ').map(word => word[0]).join('').toUpperCase().substring(0, 2),
+                role: p.role,
+                progress: p.role === 'Criador' ? 5 : 0,
+                userId: p.id
+            })) : [
                 { 
                     name: 'Você', 
                     initials: 'VC',

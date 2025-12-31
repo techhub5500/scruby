@@ -244,24 +244,109 @@ async function deleteProject(projectId) {
         return;
     }
     
-    // Confirmação com digitação do título
-    const confirmation = prompt(
-        `⚠️ ATENÇÃO: Esta ação é irreversível!\n\n` +
-        `Para confirmar a exclusão do projeto, digite o título exato:\n\n` +
-        `"${project.title}"`
-    );
+    // Criar modal customizado para confirmação copiável
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
     
-    // Verificar se o usuário digitou o título corretamente
-    if (confirmation === null) {
-        // Usuário cancelou
-        return;
-    }
+    modal.innerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+            <h3 style="margin: 0 0 1rem 0; color: #e74c3c; font-size: 1.3rem;">
+                ⚠️ ATENÇÃO: Esta ação é irreversível!
+            </h3>
+            <p style="margin-bottom: 1rem; color: #555; line-height: 1.6;">
+                Para confirmar a exclusão do projeto, copie e cole o título exato abaixo:
+            </p>
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 2px solid #dee2e6;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #1C2A39;">Título do projeto:</strong>
+                    <button id="copy-title-btn" style="padding: 0.4rem 1rem; background: #4A90E2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">
+                        📋 Copiar
+                    </button>
+                </div>
+                <div id="project-title-display" style="font-family: monospace; color: #2c3e50; font-size: 0.95rem; word-break: break-word;">${project.title}</div>
+            </div>
+            <input 
+                type="text" 
+                id="confirm-title-input" 
+                placeholder="Cole o título aqui" 
+                style="width: 100%; padding: 0.75rem; border: 2px solid #dee2e6; border-radius: 8px; font-size: 0.95rem; margin-bottom: 1rem; box-sizing: border-box;"
+            >
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button id="cancel-delete-btn" style="padding: 0.75rem 1.5rem; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Cancelar
+                </button>
+                <button id="confirm-delete-btn" style="padding: 0.75rem 1.5rem; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Confirmar Exclusão
+                </button>
+            </div>
+        </div>
+    `;
     
-    if (confirmation.trim() !== project.title) {
-        alert('❌ Título incorreto! O projeto não foi apagado.\n\nDigite o título exatamente como aparece no card.');
-        return;
-    }
+    document.body.appendChild(modal);
     
+    // Event listeners
+    const copyBtn = modal.querySelector('#copy-title-btn');
+    const confirmInput = modal.querySelector('#confirm-title-input');
+    const cancelBtn = modal.querySelector('#cancel-delete-btn');
+    const confirmBtn = modal.querySelector('#confirm-delete-btn');
+    
+    // Copiar título
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(project.title).then(() => {
+            copyBtn.textContent = '✅ Copiado!';
+            setTimeout(() => {
+                copyBtn.textContent = '📋 Copiar';
+            }, 2000);
+        });
+    });
+    
+    // Cancelar
+    cancelBtn.addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    // Confirmar exclusão
+    const handleConfirm = async () => {
+        const inputValue = confirmInput.value.trim();
+        
+        if (inputValue !== project.title) {
+            alert('❌ Título incorreto! O projeto não foi apagado.\n\nCopie e cole o título exatamente como mostrado.');
+            confirmInput.value = '';
+            confirmInput.focus();
+            return;
+        }
+        
+        // Remover modal
+        document.body.removeChild(modal);
+        
+        // Executar exclusão
+        await executeProjectDeletion(projectId, project);
+    };
+    
+    confirmBtn.addEventListener('click', handleConfirm);
+    confirmInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleConfirm();
+        }
+    });
+    
+    // Focar no input
+    setTimeout(() => confirmInput.focus(), 100);
+}
+
+// Função auxiliar para executar a exclusão
+async function executeProjectDeletion(projectId, project) {
     // Remover do array local
     projects = projects.filter(p => String(p.id) !== String(projectId));
     
@@ -457,7 +542,18 @@ async function sendModalMessage() {
     
     try {
         // Chamar API do agente
-        console.log('🚀 Enviando descrição para o agente de IA...');
+        const currentUser = getCurrentUser();
+        const totalParticipants = selectedCollaborators.length + 1; // +1 para incluir o criador
+        
+        // Preparar lista de participantes para a IA
+        const participantsList = [
+            { name: currentUser.fullName || 'Você', id: currentUser._id || currentUser.id, role: 'Criador' },
+            ...selectedCollaborators.map(c => ({ name: c.fullName, id: c.id, role: 'Colaborador' }))
+        ];
+        
+        console.log('🚀 Enviando para o agente de IA...');
+        console.log('📊 Total de participantes:', totalParticipants);
+        console.log('👥 Participantes:', participantsList.map(p => p.name).join(', '));
         
         const response = await fetch(`${AGENT_API_URL}/process-project`, {
             method: 'POST',
@@ -465,7 +561,9 @@ async function sendModalMessage() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                description: projectDescription
+                description: projectDescription,
+                participantCount: totalParticipants,
+                participants: participantsList
             })
         });
 
@@ -477,6 +575,11 @@ async function sendModalMessage() {
         const data = await response.json();
         console.log('✅ Projeto criado pela IA:', data);
 
+        // Backend já retorna a lista completa de participantes
+        const allParticipants = data.project.participants || [];
+        
+        console.log(`👥 ${allParticipants.length} participante(s) no projeto`);
+
         // Criar projeto com os dados da IA
         const newProject = {
             id: data.project.id,
@@ -485,9 +588,10 @@ async function sendModalMessage() {
             fullDescription: data.project.fullDescription,
             status: data.project.status,
             progress: data.project.progress,
-            participants: data.project.participants,
+            participants: allParticipants,
             structure: data.project.structure,
-            lastActivity: data.project.lastActivity
+            lastActivity: data.project.lastActivity,
+            isShared: selectedCollaborators.length > 0
         };
         
         // Adicionar ao array de projetos
@@ -496,8 +600,13 @@ async function sendModalMessage() {
         // Salvar no localStorage
         localStorage.setItem('projects', JSON.stringify(projects));
         
-        // Enviar convites aos colaboradores
-        await sendCollaboratorInvites(newProject.id, newProject.title, newProject.description);
+        // Enviar convites aos colaboradores (se houver)
+        if (selectedCollaborators.length > 0) {
+            await sendCollaboratorInvites(newProject.id, newProject.title, newProject.description);
+        }
+        
+        // Limpar lista de colaboradores selecionados
+        selectedCollaborators = [];
         
         // Atualizar interface
         updateFilterCounts();
@@ -513,12 +622,15 @@ async function sendModalMessage() {
                 <div class="project-preview">
                     <h4>📌 ${newProject.title}</h4>
                     <p>${newProject.description}</p>
-                    ${newProject.structure ? `
+                    ${newProject.structure && newProject.structure.categories ? `
                         <div class="structure-preview">
                             <strong>📚 Estrutura Sugerida:</strong>
                             <ul>
-                                ${newProject.structure.sections.map(s => `<li>${s.name}</li>`).join('')}
+                                ${newProject.structure.categories.map(c => `<li><strong>${c.name}</strong> - ${c.assignedTo}</li>`).join('')}
                             </ul>
+                            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                                ${newProject.structure.workloadDistribution || ''}
+                            </p>
                         </div>
                     ` : ''}
                 </div>
@@ -532,7 +644,8 @@ async function sendModalMessage() {
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
                     document.getElementById('chat-modal').style.display = 'none';
-                    // Resetar modal
+                    // Resetar modal e limpar colaboradores
+                    selectedCollaborators = [];
                     setTimeout(() => {
                         messagesContainer.innerHTML = `
                             <div class="project-description-prompt">
@@ -907,7 +1020,7 @@ window.loadAllProjects = async function loadAllProjects() {
     }
     
     try {
-        // Carregar projetos compartilhados do servidor
+        // Carregar projetos compartilhados do servidor (apenas aceitos)
         const response = await fetch(`${COLLABORATION_API}/projects/${userId}`);
         const data = await response.json();
         
@@ -915,32 +1028,63 @@ window.loadAllProjects = async function loadAllProjects() {
             console.log(`📂 ${data.sharedProjects.length} projeto(s) compartilhado(s) encontrado(s)`);
             
             // Integrar projetos compartilhados com projetos locais
-            data.sharedProjects.forEach(sharedProject => {
+            for (const sharedProject of data.sharedProjects) {
                 // Verificar se o projeto já existe localmente
-                const existingProject = projects.find(p => String(p.id) === String(sharedProject.projectId));
+                let existingProject = projects.find(p => String(p.id) === String(sharedProject.projectId));
+                
+                // Buscar TODOS os participantes do projeto (sempre)
+                const participantsResponse = await fetch(`${COLLABORATION_API}/project/${sharedProject.projectId}/participants`);
+                const participantsData = await participantsResponse.json();
+                
+                let allParticipants = [];
+                
+                if (participantsData.success) {
+                    // Adicionar todos os participantes que aceitaram
+                    allParticipants = participantsData.participants.map(p => ({
+                        name: p.name,
+                        initials: p.initials,
+                        role: 'Colaborador',
+                        progress: 0
+                    }));
+                }
+                
+                // Adicionar o criador (buscar do projeto original se necessário)
+                const creatorName = sharedProject.sharedBy;
+                const creatorInitials = creatorName.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                // Verificar se o criador já não está na lista de participantes
+                const creatorExists = allParticipants.some(p => p.name === creatorName);
+                if (!creatorExists) {
+                    allParticipants.unshift({
+                        name: creatorName,
+                        initials: creatorInitials,
+                        role: 'Criador',
+                        progress: 0
+                    });
+                }
                 
                 if (!existingProject) {
-                    // Adicionar projeto compartilhado com flag isShared
+                    // Adicionar projeto compartilhado com todos os participantes
                     const newProject = {
                         id: sharedProject.projectId,
                         title: sharedProject.projectTitle,
                         description: sharedProject.projectDescription,
                         status: 'in-progress',
                         progress: 10,
-                        participants: [
-                            { name: 'Você', initials: 'VC' },
-                            { name: sharedProject.sharedBy, initials: sharedProject.sharedBy.split(' ').map(n => n[0]).join('').toUpperCase() }
-                        ],
+                        participants: allParticipants,
                         lastActivity: 'recém compartilhado',
                         isShared: true // Marcar como compartilhado
                     };
                     
                     projects.push(newProject);
-                } else if (!existingProject.isShared) {
-                    // Se já existe mas não está marcado como compartilhado, marcar
+                    console.log(`✅ Projeto "${newProject.title}" adicionado com ${allParticipants.length} participante(s)`);
+                } else {
+                    // Atualizar participantes do projeto existente
                     existingProject.isShared = true;
+                    existingProject.participants = allParticipants;
+                    console.log(`🔄 Projeto "${existingProject.title}" atualizado com ${allParticipants.length} participante(s)`);
                 }
-            });
+            }
             
             // Atualizar localStorage
             localStorage.setItem('projects', JSON.stringify(projects));

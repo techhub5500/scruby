@@ -421,6 +421,66 @@ router.get('/projects/:userId', async (req, res) => {
 });
 
 /**
+ * GET /api/collaboration/project/:projectId/participants
+ * Buscar todos os participantes de um projeto (todos que aceitaram)
+ */
+router.get('/project/:projectId/participants', async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        
+        console.log(`👥 Buscando participantes do projeto ${projectId}`);
+        
+        // Buscar todos os convites aceitos para este projeto
+        const acceptedInvites = invitations.filter(inv => 
+            String(inv.projectId) === String(projectId) && 
+            inv.status === 'accepted'
+        );
+        
+        console.log(`✅ Encontrados ${acceptedInvites.length} participante(s)`);
+        
+        // Buscar informações dos usuários
+        const participantsPromises = acceptedInvites.map(async (inv) => {
+            try {
+                const user = await User.findById(inv.toUserId);
+                if (user) {
+                    const fullName = user.fullName || user.username || 'Usuário';
+                    const nameParts = fullName.trim().split(' ').filter(n => n.length > 0);
+                    let initials = 'U';
+                    if (nameParts.length > 0) {
+                        initials = nameParts.map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                    }
+                    
+                    return {
+                        id: user._id,
+                        name: fullName,
+                        username: user.username,
+                        initials: initials
+                    };
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro ao buscar usuário:', error);
+                return null;
+            }
+        });
+        
+        const participants = (await Promise.all(participantsPromises)).filter(p => p !== null);
+        
+        res.json({
+            success: true,
+            participants
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar participantes:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erro ao buscar participantes'
+        });
+    }
+});
+
+/**
  * POST /api/collaboration/project/:projectId/remove-user
  * Remover usuário de um projeto compartilhado
  */

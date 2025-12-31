@@ -116,6 +116,9 @@ function renderProjectInfo() {
     // Progresso
     document.getElementById('project-progress-text').textContent = `${currentProject.progress}%`;
     document.getElementById('project-progress-bar').style.width = `${currentProject.progress}%`;
+    
+    // Renderizar estrutura com categorias e atribuições (se disponível)
+    renderProjectStructure();
 }
 
 // Renderizar participantes
@@ -145,6 +148,132 @@ function renderParticipants() {
         const card = createParticipantCard(participant);
         participantsGrid.appendChild(card);
     });
+}
+
+// Renderizar estrutura do projeto com categorias e atribuições
+function renderProjectStructure() {
+    const structureContainer = document.getElementById('project-structure-container');
+    
+    // Se não existir container, criar após a seção de descrição
+    if (!structureContainer) {
+        const projectInfoSection = document.querySelector('.project-info-section');
+        if (projectInfoSection) {
+            const newContainer = document.createElement('div');
+            newContainer.id = 'project-structure-container';
+            newContainer.style.cssText = 'margin-top: 2rem;';
+            projectInfoSection.appendChild(newContainer);
+            return renderProjectStructure(); // Chamar novamente após criar
+        }
+        return;
+    }
+    
+    const structure = currentProject.structure;
+    
+    // Verificar se tem estrutura com categorias
+    if (!structure || !structure.categories || structure.categories.length === 0) {
+        structureContainer.style.display = 'none';
+        return;
+    }
+    
+    structureContainer.style.display = 'block';
+    
+    // Construir HTML da estrutura
+    let html = `
+        <div style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; color: #1C2A39; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-sitemap"></i> Estrutura do Projeto
+            </h3>
+    `;
+    
+    // Informações gerais
+    if (structure.estimatedPages || structure.suggestedDeadline) {
+        html += `
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+        `;
+        if (structure.estimatedPages) {
+            html += `
+                <div style="flex: 1;">
+                    <span style="color: #666; font-size: 0.85rem;">📄 Páginas estimadas</span>
+                    <div style="font-weight: 600; color: #1C2A39; font-size: 1.1rem;">${structure.estimatedPages}</div>
+                </div>
+            `;
+        }
+        if (structure.suggestedDeadline) {
+            html += `
+                <div style="flex: 1;">
+                    <span style="color: #666; font-size: 0.85rem;">⏰ Prazo sugerido</span>
+                    <div style="font-weight: 600; color: #1C2A39; font-size: 1.1rem;">${structure.suggestedDeadline}</div>
+                </div>
+            `;
+        }
+        html += `</div>`;
+    }
+    
+    // Distribuição de carga de trabalho
+    if (structure.workloadDistribution) {
+        html += `
+            <div style="padding: 1rem; background: #e8f4f8; border-left: 4px solid #4A90E2; border-radius: 4px; margin-bottom: 1.5rem;">
+                <strong style="color: #1C2A39;">💡 Distribuição de Carga:</strong>
+                <p style="margin: 0.5rem 0 0 0; color: #555; line-height: 1.6;">${structure.workloadDistribution}</p>
+            </div>
+        `;
+    }
+    
+    // Categorias
+    html += `<div style="display: flex; flex-direction: column; gap: 1rem;">`;
+    
+    structure.categories.forEach((category, index) => {
+        const categoryColor = getCategoryColor(index);
+        
+        html += `
+            <div style="border: 2px solid ${categoryColor}; border-radius: 12px; padding: 1.5rem; background: ${categoryColor}08;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1C2A39; font-size: 1.1rem;">
+                            📌 ${category.name}
+                        </h4>
+                        ${category.description ? `<p style="margin: 0; color: #666; font-size: 0.9rem;">${category.description}</p>` : ''}
+                    </div>
+                    <div style="background: ${categoryColor}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem; white-space: nowrap; margin-left: 1rem;">
+                        👤 ${category.assignedTo}
+                    </div>
+                </div>
+                
+                ${category.subcategories && category.subcategories.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                        <strong style="color: #555; font-size: 0.9rem;">Subcategorias (${category.subcategories.length}):</strong>
+                        <div style="display: grid; gap: 0.75rem; margin-top: 0.75rem;">
+                            ${category.subcategories.map(sub => `
+                                <div style="background: white; padding: 0.75rem; border-radius: 8px; border-left: 3px solid ${categoryColor};">
+                                    <div style="font-weight: 600; color: #1C2A39; margin-bottom: 0.25rem;">• ${sub.name}</div>
+                                    ${sub.description ? `<div style="color: #666; font-size: 0.85rem; margin-left: 1rem;">${sub.description}</div>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    html += `</div></div>`;
+    
+    structureContainer.innerHTML = html;
+}
+
+// Obter cor para cada categoria
+function getCategoryColor(index) {
+    const colors = [
+        '#4A90E2', // Azul
+        '#50C878', // Verde
+        '#FF6B6B', // Vermelho
+        '#FFA500', // Laranja
+        '#9B59B6', // Roxo
+        '#1ABC9C', // Turquesa
+        '#E74C3C', // Vermelho escuro
+        '#3498DB'  // Azul claro
+    ];
+    return colors[index % colors.length];
 }
 
 // Criar card de participante
