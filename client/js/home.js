@@ -2,77 +2,13 @@
 // HOME.JS - Página Inicial
 // ===========================
 
-// Dados mock de projetos
-let projects = JSON.parse(localStorage.getItem('projects')) || [
-    {
-        id: 1,
-        title: "Aplicações Clínicas da Biomedicina Molecular",
-        description: "Revisão acadêmica sobre técnicas moleculares aplicadas ao diagnóstico clínico.",
-        status: "in-progress",
-        progress: 65,
-        participants: [
-            { name: "Ana Silva", initials: "AS" },
-            { name: "Bruno Costa", initials: "BC" },
-            { name: "Carlos Mendes", initials: "CM" }
-        ],
-        lastActivity: "há 2 dias"
-    },
-    {
-        id: 2,
-        title: "Inteligência Artificial na Medicina",
-        description: "Estudo sobre machine learning aplicado a diagnósticos médicos precoces.",
-        status: "in-progress",
-        progress: 42,
-        participants: [
-            { name: "Daniela Souza", initials: "DS" },
-            { name: "Eduardo Lima", initials: "EL" }
-        ],
-        lastActivity: "há 5 horas"
-    },
-    {
-        id: 3,
-        title: "Sustentabilidade em Projetos Urbanos",
-        description: "Análise de práticas sustentáveis em desenvolvimento urbano moderno.",
-        status: "completed",
-        progress: 100,
-        participants: [
-            { name: "Fernanda Reis", initials: "FR" },
-            { name: "Gabriel Nunes", initials: "GN" },
-            { name: "Helena Castro", initials: "HC" },
-            { name: "Igor Alves", initials: "IA" }
-        ],
-        lastActivity: "há 1 semana"
-    },
-    {
-        id: 4,
-        title: "Narrativas Contemporâneas na Literatura",
-        description: "Estudo comparativo entre autores contemporâneos brasileiros e estrangeiros.",
-        status: "delayed",
-        progress: 28,
-        participants: [
-            { name: "Julia Martins", initials: "JM" },
-            { name: "Klaus Ferreira", initials: "KF" }
-        ],
-        lastActivity: "há 10 dias"
-    },
-    {
-        id: 5,
-        title: "Blockchain e Criptomoedas",
-        description: "Análise técnica e econômica sobre a tecnologia blockchain.",
-        status: "in-progress",
-        progress: 55,
-        participants: [
-            { name: "Laura Oliveira", initials: "LO" },
-            { name: "Marcos Silva", initials: "MS" },
-            { name: "Natália Costa", initials: "NC" }
-        ],
-        lastActivity: "há 1 dia"
-    }
-];
+// Dados de projetos (carregados do localStorage)
+let projects = JSON.parse(localStorage.getItem('projects')) || [];
 
-// Salvar projetos iniciais se não existirem
+// Inicializar localStorage vazio se não existir
 if (!localStorage.getItem('projects')) {
-    localStorage.setItem('projects', JSON.stringify(projects));
+    localStorage.setItem('projects', JSON.stringify([]));
+    projects = [];
 }
 
 let currentFilter = 'all';

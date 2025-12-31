@@ -433,7 +433,16 @@
     font-size: 2rem;
     font-weight: 700;
     color: #1C2A39;
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.5rem 0;
+}
+
+.project-description {
+    font-size: 1rem;
+    color: #6c757d;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+    padding: 0;
+    max-width: 800px;
 }
 
 .project-meta {

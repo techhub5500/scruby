@@ -55,26 +55,23 @@ function loadProjectData() {
         return;
     }
     
-    // Buscar projeto nos dados (usar window.projectsData se disponível)
-    const projects = window.projectsData || [
-        {
-            id: 1,
-            title: "Aplicações Clínicas da Biomedicina Molecular",
-            description: "Revisão acadêmica sobre técnicas moleculares aplicadas ao diagnóstico clínico.",
-            status: "in-progress",
-            progress: 65,
-            participants: mockParticipants,
-            lastActivity: "há 2 dias"
-        }
-    ];
+    // Buscar projeto nos dados do localStorage
+    const projects = JSON.parse(localStorage.getItem('projects')) || [];
     
-    currentProject = projects.find(p => p.id == projectId);
+    console.log('🔍 Buscando projeto com ID:', projectId);
+    console.log('📦 Projetos disponíveis:', projects);
+    
+    currentProject = projects.find(p => String(p.id) === String(projectId));
     
     if (!currentProject) {
-        alert('Projeto não encontrado!');
+        console.error('❌ Projeto não encontrado com ID:', projectId);
+        console.error('📦 Projetos disponíveis:', projects.map(p => ({ id: p.id, title: p.title })));
+        alert('Projeto não encontrado! Você será redirecionado para a página inicial.');
         window.location.href = 'home.html';
         return;
     }
+    
+    console.log('✅ Projeto encontrado:', currentProject.title);
     
     // Renderizar informações do projeto
     renderProjectInfo();
@@ -85,6 +82,14 @@ function loadProjectData() {
 function renderProjectInfo() {
     // Título
     document.getElementById('project-title').textContent = currentProject.title;
+    
+    // Descrição
+    const descriptionElement = document.getElementById('project-description');
+    if (descriptionElement) {
+        // Usar fullDescription se disponível, senão usar description
+        const description = currentProject.fullDescription || currentProject.description || 'Sem descrição disponível.';
+        descriptionElement.textContent = description;
+    }
     
     // Status
     const statusBadge = document.getElementById('project-status');
@@ -116,13 +121,24 @@ function renderProjectInfo() {
 // Renderizar participantes
 function renderParticipants() {
     const participantsGrid = document.getElementById('participants-grid');
-    const participants = currentProject.participants || mockParticipants;
+    const participants = currentProject.participants || [];
     
     // Atualizar contador
     document.getElementById('participant-count').textContent = `(${participants.length})`;
     
     // Limpar grid
     participantsGrid.innerHTML = '';
+    
+    // Se não houver participantes, mostrar mensagem
+    if (participants.length === 0) {
+        participantsGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #666;">
+                <i class="fas fa-users" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>Nenhum participante adicionado ainda.</p>
+            </div>
+        `;
+        return;
+    }
     
     // Renderizar cada participante
     participants.forEach(participant => {
@@ -136,25 +152,29 @@ function createParticipantCard(participant) {
     const card = document.createElement('div');
     card.className = 'participant-card';
     
+    const role = participant.role || 'Participante';
+    const progress = participant.progress || 0;
+    const lastActivity = participant.lastActivity || 'sem atividade recente';
+    
     card.innerHTML = `
         <div class="participant-header">
             <div class="participant-avatar">${participant.initials}</div>
             <div class="participant-info">
                 <h4>${participant.name}</h4>
-                <p class="participant-role">${participant.role}</p>
+                <p class="participant-role">${role}</p>
             </div>
         </div>
         <div class="participant-progress">
             <div class="progress-label">
                 <span>Progresso</span>
-                <span class="progress-percentage">${participant.progress}%</span>
+                <span class="progress-percentage">${progress}%</span>
             </div>
             <div class="progress-bar-container">
-                <div class="progress-bar-fill" style="width: ${participant.progress}%"></div>
+                <div class="progress-bar-fill" style="width: ${progress}%"></div>
             </div>
         </div>
         <div class="participant-activity">
-            <i class="fas fa-clock"></i> Última atividade: ${participant.lastActivity}
+            <i class="fas fa-clock"></i> Última atividade: ${lastActivity}
         </div>
     `;
     
