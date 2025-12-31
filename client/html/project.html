@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../css/main.css">
     <link rel="stylesheet" href="../css/home.css">
     <link rel="stylesheet" href="../css/editor.css">
+    <link rel="stylesheet" href="../css/notifications.css">
 </head>
 <body>
     <div class="container">
@@ -55,7 +56,21 @@
                     <input type="search" placeholder="Pesquisar..." class="search-bar">
                 </div>
                 <div class="header-right">
-                    <i class="fas fa-bell users-icon" title="Notificações"></i>
+                    <div class="notifications-container">
+                        <div id="notification-bell" class="notification-bell">
+                            <i class="fas fa-bell"></i>
+                            <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+                        </div>
+                        <div id="notifications-dropdown" class="notifications-dropdown">
+                            <div class="notifications-header">
+                                <h3>Notificações</h3>
+                                <button id="mark-all-read-btn" class="mark-all-read">Marcar todas como lidas</button>
+                            </div>
+                            <div id="notifications-list" class="notifications-list">
+                                <!-- Notificações serão inseridas aqui -->
+                            </div>
+                        </div>
+                    </div>
                     <img src="../images/user.svg" alt="User" class="user-icon">
                     <button id="toggle-right" class="header-btn"><i class="fas fa-chevron-right"></i></button>
                 </div>
@@ -200,6 +215,7 @@
     </div>
     <script src="../js/main.js"></script>
     <script src="../js/editor.js"></script>
+    <script src="../js/notifications.js"></script>
     <script src="../js/project.js"></script>
 </body>
 </html>

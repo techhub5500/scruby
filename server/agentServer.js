@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const { processProjectWithAI, validateAPIKey } = require('./agent');
+const collaborationRoutes = require('./routes/collaboration');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -64,6 +65,9 @@ const Project = mongoose.model('Project', projectSchema);
 // ===========================
 // ROTAS
 // ===========================
+
+// Rotas de colaboração
+app.use('/api/collaboration', collaborationRoutes);
 
 // Rota de health check
 app.get('/health', (req, res) => {

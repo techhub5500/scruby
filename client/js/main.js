@@ -115,11 +115,24 @@ document.addEventListener('mouseup', () => {
 
 // File system
 const API_URL = 'http://localhost:3000/api';
-const USER_ID = 'default-user'; // Por enquanto um usuário padrão
+
+// Função para obter USER_ID do usuário autenticado
+function getUserId() {
+    let user = JSON.parse(localStorage.getItem('scruby_user'));
+    if (!user) {
+        user = JSON.parse(localStorage.getItem('currentUser'));
+    }
+    
+    // Normalizar: aceitar tanto _id quanto id
+    const userId = user?._id || user?.id;
+    
+    // Retornar ID do usuário ou 'guest' se não autenticado
+    return userId || 'guest-user';
+}
 
 // Expose globally for editor.js
 window.API_URL = API_URL;
-window.USER_ID = USER_ID;
+window.getUserId = getUserId;
 
 let fileSystem = {
     name: 'Root',
@@ -132,23 +145,28 @@ window.fileSystemData = fileSystem;
 
 // Load file system from server
 async function loadFileSystem() {
+    const userId = getUserId();
+    console.log('📁 Carregando sistema de arquivos para usuário:', userId);
+    
     try {
-        const response = await fetch(`${API_URL}/filesystem/${USER_ID}`);
+        const response = await fetch(`${API_URL}/filesystem/${userId}`);
         if (response.ok) {
             fileSystem = await response.json();
             window.fileSystemData = fileSystem;
             currentFolder = fileSystem; // Update currentFolder reference
             renderTree();
+            console.log('✅ Sistema de arquivos carregado');
         }
     } catch (error) {
         console.error('Error loading file system:', error);
     }
 }
 
-// Save file system to server
 async function saveFileSystem() {
+    const userId = getUserId();
+    
     try {
-        const response = await fetch(`${API_URL}/filesystem/${USER_ID}`, {
+        const response = await fetch(`${API_URL}/filesystem/${userId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -156,7 +174,7 @@ async function saveFileSystem() {
             body: JSON.stringify(fileSystem)
         });
         if (response.ok) {
-            console.log('File system saved successfully');
+            console.log('✅ Sistema de arquivos salvo para usuário:', userId);
             const data = await response.json();
             console.log('Server response:', data);
         } else {
@@ -168,6 +186,7 @@ async function saveFileSystem() {
         console.error('Error saving file system:', error);
     }
 }
+
 
 let currentFolder = fileSystem;
 let clipboard = null;

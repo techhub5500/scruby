@@ -1,0 +1,233 @@
+/* ===========================
+   NOTIFICAÇÕES
+   =========================== */
+
+.notifications-container {
+    position: relative;
+}
+
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #1C2A39;
+    font-size: 1.2rem;
+    transition: color 0.3s;
+}
+
+.notification-bell:hover {
+    color: #4A90E2;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.notifications-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: 400px;
+    max-height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    display: none;
+    flex-direction: column;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.notifications-dropdown.show {
+    display: flex;
+}
+
+.notifications-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #E8ECF0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notifications-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1C2A39;
+}
+
+.mark-all-read {
+    background: none;
+    border: none;
+    color: #4A90E2;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.mark-all-read:hover {
+    background: #f0f7ff;
+}
+
+.notifications-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.notification-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+}
+
+.notification-item.unread {
+    background: #f0f7ff;
+}
+
+.notification-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: #4A90E2;
+    border-radius: 0 4px 4px 0;
+}
+
+.notification-content {
+    display: flex;
+    gap: 1rem;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.notification-icon.invite {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.notification-icon.accepted {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.notification-details {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #1C2A39;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+
+.notification-message {
+    color: #666;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.notification-time {
+    color: #999;
+    font-size: 0.75rem;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.notification-action-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.notification-action-btn.accept {
+    background: #27ae60;
+    color: white;
+}
+
+.notification-action-btn.accept:hover {
+    background: #229954;
+}
+
+.notification-action-btn.decline {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.notification-action-btn.decline:hover {
+    background: #d0d0d0;
+}
+
+.notifications-empty {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: #999;
+}
+
+.notifications-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+.notifications-empty p {
+    margin: 0;
+}
+
+/* Animações */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notifications-dropdown.show {
+    animation: slideDown 0.3s ease;
+}

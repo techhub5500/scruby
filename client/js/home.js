@@ -2,6 +2,29 @@
 // HOME.JS - Página Inicial
 // ===========================
 
+// Função helper para obter usuário atual
+function getCurrentUser() {
+    console.log('🔍 [DEBUG] Verificando autenticação...');
+    console.log('🔍 [DEBUG] localStorage.scruby_user:', localStorage.getItem('scruby_user'));
+    console.log('🔍 [DEBUG] localStorage.currentUser:', localStorage.getItem('currentUser'));
+    
+    let user = JSON.parse(localStorage.getItem('scruby_user'));
+    if (!user) {
+        user = JSON.parse(localStorage.getItem('currentUser'));
+    }
+    
+    // Normalizar: garantir que _id existe (compatibilidade com backend MongoDB)
+    if (user && user.id && !user._id) {
+        user._id = user.id;
+    }
+    
+    console.log('🔍 [DEBUG] Usuário retornado:', user);
+    console.log('🔍 [DEBUG] Tem _id?', user ? !!user._id : 'null');
+    console.log('🔍 [DEBUG] Tem id?', user ? !!user.id : 'null');
+    
+    return user;
+}
+
 // Dados de projetos (carregados do localStorage)
 let projects = JSON.parse(localStorage.getItem('projects')) || [];
 
@@ -16,6 +39,7 @@ let currentFilter = 'all';
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     initializeHome();
+    loadAllProjects(); // Carregar projetos próprios + compartilhados
 });
 
 function initializeHome() {
@@ -212,18 +236,71 @@ function openProject(projectId) {
 }
 
 // Apagar projeto
-function deleteProject(projectId) {
-    if (confirm('Tem certeza que deseja apagar este projeto?')) {
-        // Remover do array
-        projects = projects.filter(p => p.id !== projectId);
-        
-        // Salvar no localStorage
-        localStorage.setItem('projects', JSON.stringify(projects));
-        
-        // Atualizar interface
-        updateFilterCounts();
-        renderProjects();
+async function deleteProject(projectId) {
+    const project = projects.find(p => String(p.id) === String(projectId));
+    
+    if (!project) {
+        alert('Projeto não encontrado!');
+        return;
     }
+    
+    // Confirmação com digitação do título
+    const confirmation = prompt(
+        `⚠️ ATENÇÃO: Esta ação é irreversível!\n\n` +
+        `Para confirmar a exclusão do projeto, digite o título exato:\n\n` +
+        `"${project.title}"`
+    );
+    
+    // Verificar se o usuário digitou o título corretamente
+    if (confirmation === null) {
+        // Usuário cancelou
+        return;
+    }
+    
+    if (confirmation.trim() !== project.title) {
+        alert('❌ Título incorreto! O projeto não foi apagado.\n\nDigite o título exatamente como aparece no card.');
+        return;
+    }
+    
+    // Remover do array local
+    projects = projects.filter(p => String(p.id) !== String(projectId));
+    
+    // Salvar no localStorage
+    localStorage.setItem('projects', JSON.stringify(projects));
+    
+    // Se for um projeto compartilhado, remover do servidor também
+    const currentUser = getCurrentUser();
+    const userId = currentUser?._id || currentUser?.id;
+    
+    if (userId && project.isShared) {
+        try {
+            console.log('🗑️ Removendo projeto compartilhado do servidor...');
+            const response = await fetch(`${COLLABORATION_API}/project/${projectId}/remove-user`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ userId })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log('✅ Projeto removido do servidor');
+            } else {
+                console.warn('⚠️ Não foi possível remover do servidor:', data.error);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao remover projeto do servidor:', error);
+        }
+    }
+    
+    // Atualizar interface
+    updateFilterCounts();
+    renderProjects();
+    
+    // Feedback visual
+    alert(`✅ Projeto "${project.title}" foi apagado com sucesso!`);
 }
 
 // Filtros
@@ -300,12 +377,44 @@ function createProject() {
         <div class="project-description-prompt">
             <h3>Descreva seu projeto acadêmico</h3>
             <p>Descreva seu projeto acadêmico com o máximo de detalhes possíveis — tema, regras da disciplina, exigências do professor, formato, critérios de avaliação, prazos, número de alunos e referências permitidas. Quanto mais completa for a descrição, melhor o Scruby poderá organizar e estruturar todas as informações para você.</p>
+            
+            <!-- Seção de Colaboradores -->
+            <div class="collaborators-section" style="margin-top: 2rem; border-top: 1px solid #e0e0e0; padding-top: 1.5rem;">
+                <h4 style="margin-bottom: 1rem; color: #1C2A39; font-size: 1rem;">
+                    <i class="fas fa-users"></i> Adicionar Colaboradores (Opcional)
+                </h4>
+                <div class="collaborator-search" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <input 
+                        type="text" 
+                        id="collaborator-id-input" 
+                        placeholder="Digite o ID do usuário" 
+                        style="flex: 1; padding: 0.75rem; border: 2px solid #E8ECF0; border-radius: 8px; font-size: 0.9rem;"
+                    >
+                    <button 
+                        id="search-collaborator-btn" 
+                        style="padding: 0.75rem 1.5rem; background: #4A90E2; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s;"
+                        onmouseover="this.style.background='#357ABD'"
+                        onmouseout="this.style.background='#4A90E2'"
+                    >
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                <div id="collaborator-preview" style="display: none; padding: 1rem; background: #f8f9fa; border-radius: 8px; margin-bottom: 1rem;">
+                    <!-- Preview do colaborador será inserido aqui -->
+                </div>
+                <div id="added-collaborators" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <!-- Colaboradores adicionados aparecerão aqui -->
+                </div>
+            </div>
         </div>
     `;
     
     const input = document.getElementById('modal-chat-input');
     input.value = '';
     input.style.height = 'auto';
+    
+    // Setup event listeners para colaboradores
+    setupCollaboratorListeners();
     
     // Focar no input
     setTimeout(() => {
@@ -386,6 +495,9 @@ async function sendModalMessage() {
         
         // Salvar no localStorage
         localStorage.setItem('projects', JSON.stringify(projects));
+        
+        // Enviar convites aos colaboradores
+        await sendCollaboratorInvites(newProject.id, newProject.title, newProject.description);
         
         // Atualizar interface
         updateFilterCounts();
@@ -557,5 +669,289 @@ function hidePromptIfNeeded() {
         prompt.style.display = 'none';
     } else if (input && !input.value.trim() && prompt) {
         prompt.style.display = 'flex';
+    }
+}
+
+// ===========================
+// SISTEMA DE COLABORAÇÃO
+// ===========================
+
+const COLLABORATION_API = 'http://localhost:3001/api/collaboration';
+let selectedCollaborators = [];
+
+// Setup event listeners para colaboradores
+function setupCollaboratorListeners() {
+    const searchBtn = document.getElementById('search-collaborator-btn');
+    const idInput = document.getElementById('collaborator-id-input');
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchCollaborator);
+    }
+    
+    if (idInput) {
+        idInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchCollaborator();
+            }
+        });
+    }
+}
+
+// Buscar colaborador por ID
+async function searchCollaborator() {
+    const idInput = document.getElementById('collaborator-id-input');
+    const userId = idInput.value.trim();
+    
+    if (!userId) {
+        alert('Por favor, digite um ID de usuário');
+        return;
+    }
+    
+    const previewContainer = document.getElementById('collaborator-preview');
+    
+    try {
+        previewContainer.style.display = 'block';
+        previewContainer.innerHTML = `
+            <div style="text-align: center; padding: 1rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: #4A90E2;"></i>
+                <p style="margin-top: 0.5rem; color: #666;">Buscando usuário...</p>
+            </div>
+        `;
+        
+        const response = await fetch(`${COLLABORATION_API}/user/${userId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'Usuário não encontrado');
+        }
+        
+        const user = data.user;
+        
+        // Verificar se já foi adicionado
+        if (selectedCollaborators.find(c => c.id === user.id)) {
+            previewContainer.innerHTML = `
+                <div style="text-align: center; color: #f39c12;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                    <p style="margin-top: 0.5rem;">Este usuário já foi adicionado!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Mostrar preview do usuário
+        previewContainer.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
+                        ${user.initials}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #1C2A39; font-size: 1rem;">${user.fullName}</h4>
+                        <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">@${user.username}</p>
+                        <p style="margin: 0.25rem 0 0 0; color: #999; font-size: 0.8rem;">ID: ${user.id}</p>
+                    </div>
+                </div>
+                <button 
+                    onclick="addCollaborator('${user.id}', '${user.fullName.replace(/'/g, "\\'")}', '${user.username}', '${user.initials}')"
+                    style="padding: 0.75rem 1.5rem; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s;"
+                    onmouseover="this.style.background='#229954'"
+                    onmouseout="this.style.background='#27ae60'"
+                >
+                    <i class="fas fa-plus"></i> Adicionar
+                </button>
+            </div>
+        `;
+        
+        idInput.value = '';
+        
+    } catch (error) {
+        console.error('Erro ao buscar colaborador:', error);
+        previewContainer.innerHTML = `
+            <div style="text-align: center; color: #e74c3c;">
+                <i class="fas fa-times-circle" style="font-size: 1.5rem;"></i>
+                <p style="margin-top: 0.5rem;">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Adicionar colaborador à lista
+window.addCollaborator = function addCollaborator(id, fullName, username, initials) {
+    const collaborator = { id, fullName, username, initials };
+    selectedCollaborators.push(collaborator);
+    
+    // Limpar preview
+    const previewContainer = document.getElementById('collaborator-preview');
+    previewContainer.style.display = 'none';
+    previewContainer.innerHTML = '';
+    
+    // Renderizar lista de colaboradores
+    renderAddedCollaborators();
+}
+
+// Remover colaborador da lista
+window.removeCollaborator = function removeCollaborator(id) {
+    selectedCollaborators = selectedCollaborators.filter(c => c.id !== id);
+    renderAddedCollaborators();
+}
+
+// Renderizar colaboradores adicionados
+function renderAddedCollaborators() {
+    const container = document.getElementById('added-collaborators');
+    
+    if (selectedCollaborators.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = selectedCollaborators.map(collaborator => `
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: white; border: 2px solid #E8ECF0; border-radius: 20px;">
+            <div style="width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.75rem;">
+                ${collaborator.initials}
+            </div>
+            <span style="font-size: 0.9rem; color: #1C2A39; font-weight: 500;">${collaborator.fullName}</span>
+            <button 
+                onclick="removeCollaborator('${collaborator.id}')"
+                style="background: none; border: none; color: #e74c3c; cursor: pointer; padding: 0.25rem; font-size: 0.9rem;"
+                title="Remover"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+// Enviar convites para colaboradores
+async function sendCollaboratorInvites(projectId, projectTitle, projectDescription) {
+    console.log('🚀 [DEBUG] sendCollaboratorInvites chamada');
+    console.log('🚀 [DEBUG] selectedCollaborators:', selectedCollaborators);
+    
+    if (selectedCollaborators.length === 0) {
+        console.log('⚠️ [DEBUG] Nenhum colaborador selecionado');
+        return;
+    }
+    
+    console.log('🔐 [DEBUG] Chamando getCurrentUser()...');
+    const currentUser = getCurrentUser();
+    console.log('🔐 [DEBUG] currentUser retornado:', currentUser);
+    
+    // Aceitar tanto _id (MongoDB) quanto id (frontend)
+    const userId = currentUser?._id || currentUser?.id;
+    
+    if (!currentUser || !userId) {
+        console.error('❌ Usuário não autenticado - convites não serão enviados');
+        console.log('⚠️ Faça login para enviar convites aos colaboradores');
+        
+        // Notificar usuário
+        alert('Você precisa estar logado para enviar convites aos colaboradores.\n\nO projeto foi criado, mas os convites não foram enviados.');
+        
+        // Limpar colaboradores selecionados
+        selectedCollaborators = [];
+        return;
+    }
+    
+    console.log(`📨 Enviando ${selectedCollaborators.length} convites...`);
+    console.log(`👤 Usuário atual: ${currentUser.fullName || currentUser.name || currentUser.username} (ID: ${userId})`);
+    
+    const invitePromises = selectedCollaborators.map(async (collaborator) => {
+        try {
+            const response = await fetch(`${COLLABORATION_API}/invite`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    projectId,
+                    projectTitle,
+                    projectDescription,
+                    fromUserId: userId,
+                    toUserId: collaborator.id
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`✅ Convite enviado para ${collaborator.fullName}`);
+            } else {
+                console.error(`❌ Erro ao enviar convite para ${collaborator.fullName}:`, data.error);
+            }
+            
+            return data;
+        } catch (error) {
+            console.error(`❌ Erro ao enviar convite para ${collaborator.fullName}:`, error);
+            return null;
+        }
+    });
+    
+    await Promise.all(invitePromises);
+    
+    // Limpar lista de colaboradores selecionados
+    selectedCollaborators = [];
+    
+    console.log('✅ Todos os convites foram processados');
+}
+
+// ===========================
+// CARREGAR PROJETOS COMPARTILHADOS
+// ===========================
+
+// Carregar todos os projetos (próprios + compartilhados)
+window.loadAllProjects = async function loadAllProjects() {
+    const currentUser = getCurrentUser();
+    const userId = currentUser?._id || currentUser?.id;
+    
+    if (!currentUser || !userId) {
+        console.log('⚠️ Usuário não autenticado - carregando apenas projetos locais');
+        return;
+    }
+    
+    try {
+        // Carregar projetos compartilhados do servidor
+        const response = await fetch(`${COLLABORATION_API}/projects/${userId}`);
+        const data = await response.json();
+        
+        if (data.success && data.sharedProjects.length > 0) {
+            console.log(`📂 ${data.sharedProjects.length} projeto(s) compartilhado(s) encontrado(s)`);
+            
+            // Integrar projetos compartilhados com projetos locais
+            data.sharedProjects.forEach(sharedProject => {
+                // Verificar se o projeto já existe localmente
+                const existingProject = projects.find(p => String(p.id) === String(sharedProject.projectId));
+                
+                if (!existingProject) {
+                    // Adicionar projeto compartilhado com flag isShared
+                    const newProject = {
+                        id: sharedProject.projectId,
+                        title: sharedProject.projectTitle,
+                        description: sharedProject.projectDescription,
+                        status: 'in-progress',
+                        progress: 10,
+                        participants: [
+                            { name: 'Você', initials: 'VC' },
+                            { name: sharedProject.sharedBy, initials: sharedProject.sharedBy.split(' ').map(n => n[0]).join('').toUpperCase() }
+                        ],
+                        lastActivity: 'recém compartilhado',
+                        isShared: true // Marcar como compartilhado
+                    };
+                    
+                    projects.push(newProject);
+                } else if (!existingProject.isShared) {
+                    // Se já existe mas não está marcado como compartilhado, marcar
+                    existingProject.isShared = true;
+                }
+            });
+            
+            // Atualizar localStorage
+            localStorage.setItem('projects', JSON.stringify(projects));
+            
+            // Atualizar interface
+            updateFilterCounts();
+            renderProjects();
+        } else {
+            console.log('📂 Nenhum projeto compartilhado encontrado');
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar projetos compartilhados:', error);
     }
 }
