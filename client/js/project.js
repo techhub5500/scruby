@@ -366,12 +366,12 @@ function setupEventListeners() {
     
     // Botão abrir estrutura
     document.getElementById('open-structure-btn').addEventListener('click', () => {
-        alert('Funcionalidade de estrutura do trabalho em desenvolvimento!');
+        scrollToStructure();
     });
     
     // Botão acessar documentos
     document.getElementById('open-documents-btn').addEventListener('click', () => {
-        alert('Funcionalidade de documentos em desenvolvimento!');
+        showDocumentsByUser();
     });
     
     // Navegação para home no ícone
@@ -381,4 +381,508 @@ function setupEventListeners() {
             window.location.href = 'home.html';
         });
     }
+}
+
+// Scroll suave até a estrutura
+function scrollToStructure() {
+    const structureContainer = document.getElementById('project-structure-container');
+    if (structureContainer) {
+        structureContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// ===========================
+// SISTEMA DE DOCUMENTOS POR USUÁRIO
+// ===========================
+
+/**
+ * Exibe documentos organizados por usuário com base nas categorias atribuídas
+ */
+async function showDocumentsByUser() {
+    const container = document.getElementById('documents-by-user-container');
+    
+    if (!container) {
+        console.error('❌ Container de documentos não encontrado');
+        return;
+    }
+    
+    // Mostrar loading
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div style="text-align: center; padding: 3rem;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #4A90E2;"></i>
+            <p style="margin-top: 1rem; color: #666;">Carregando documentos...</p>
+        </div>
+    `;
+    
+    // Scroll até a seção
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Buscar estrutura do projeto
+    const structure = currentProject?.structure;
+    
+    if (!structure || !structure.categories || structure.categories.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <i class="fas fa-folder-open" style="font-size: 3rem; color: #ddd;"></i>
+                <h3 style="margin-top: 1rem; color: #666;">Nenhum documento disponível</h3>
+                <p style="color: #999;">O projeto ainda não possui categorias ou documentos.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Agrupar categorias por usuário
+    const userCategories = {};
+    
+    structure.categories.forEach(category => {
+        const assignedUser = category.assignedTo;
+        if (!userCategories[assignedUser]) {
+            userCategories[assignedUser] = [];
+        }
+        userCategories[assignedUser].push(category);
+    });
+    
+    console.log('📊 Categorias por usuário:', userCategories);
+    
+    // Buscar fileSystem de cada usuário
+    const usersData = await Promise.all(
+        Object.keys(userCategories).map(async (userName) => {
+            // Encontrar participante pelo nome
+            const participant = currentProject.participants.find(p => p.name === userName);
+            
+            if (!participant) {
+                console.warn(`⚠️ Participante ${userName} não encontrado`);
+                return null;
+            }
+            
+            // Buscar ID do usuário
+            const userId = await getUserIdByName(userName, participant);
+            
+            if (!userId) {
+                console.warn(`⚠️ ID do usuário ${userName} não encontrado`);
+                return { userName, categories: userCategories[userName], files: null, lastUpdate: 'Desconhecido' };
+            }
+            
+            // Buscar fileSystem do usuário
+            const fileSystemData = await fetchUserFileSystem(userId);
+            console.log(`📊 FileSystem obtido para ${userName}:`, fileSystemData);
+            
+            const userData = {
+                userName,
+                userId,
+                categories: userCategories[userName],
+                files: fileSystemData,
+                lastUpdate: fileSystemData ? getLastUpdateDate(fileSystemData) : 'Sem atualizações'
+            };
+            
+            console.log(`👤 Dados finais para ${userName}:`, userData);
+            
+            return userData;
+        })
+    );
+    
+    // Filtrar usuários válidos
+    const validUsers = usersData.filter(u => u !== null);
+    
+    console.log('✅ Total de usuários válidos:', validUsers.length);
+    console.log('📋 Usuários válidos:', validUsers);
+    
+    if (validUsers.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #f39c12;"></i>
+                <h3 style="margin-top: 1rem; color: #666;">Nenhum documento encontrado</h3>
+                <p style="color: #999;">Os participantes ainda não criaram seus documentos.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Renderizar cards dos usuários
+    renderUserDocumentCards(validUsers);
+}
+
+/**
+ * Busca ID do usuário pelo nome
+ */
+async function getUserIdByName(userName, participant) {
+    console.log('🔍 Buscando ID para:', userName, 'Participante:', participant);
+    
+    // Se o participante já tem ID, usar diretamente (verificar id e userId)
+    if (participant) {
+        const participantId = participant.userId || participant.id || participant._id;
+        if (participantId) {
+            console.log('✅ ID encontrado no participante:', participantId);
+            return participantId;
+        }
+    }
+    
+    // Verificar se é o usuário atual
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        // Comparar com fullName, name ou username
+        if (currentUser.fullName === userName || 
+            currentUser.name === userName || 
+            currentUser.username === userName ||
+            userName === 'Você') {
+            const userId = currentUser._id || currentUser.id;
+            console.log('✅ Usuário atual identificado, ID:', userId);
+            return userId;
+        }
+    }
+    
+    // Buscar nos participantes do projeto atual
+    if (currentProject && currentProject.participants) {
+        const projectParticipant = currentProject.participants.find(p => 
+            p.name === userName || p.fullName === userName || p.username === userName
+        );
+        
+        if (projectParticipant) {
+            const participantId = projectParticipant.userId || projectParticipant.id || projectParticipant._id;
+            if (participantId) {
+                console.log('✅ ID encontrado nos participantes do projeto:', participantId);
+                return participantId;
+            }
+        }
+    }
+    
+    // Buscar nos colaboradores selecionados (se disponível)
+    const storedCollaborators = JSON.parse(sessionStorage.getItem('project_collaborators') || '[]');
+    const collaborator = storedCollaborators.find(c => 
+        c.fullName === userName || c.name === userName || c.username === userName
+    );
+    
+    if (collaborator) {
+        const collaboratorId = collaborator.userId || collaborator.id || collaborator._id;
+        if (collaboratorId) {
+            console.log('✅ ID encontrado nos colaboradores:', collaboratorId);
+            return collaboratorId;
+        }
+    }
+    
+    console.warn('⚠️ ID não encontrado para:', userName);
+    return null;
+}
+
+/**
+ * Obtém usuário atual
+ */
+function getCurrentUser() {
+    let user = JSON.parse(localStorage.getItem('scruby_user'));
+    if (!user) {
+        user = JSON.parse(localStorage.getItem('currentUser'));
+    }
+    return user;
+}
+
+/**
+ * Busca fileSystem do usuário no servidor
+ */
+async function fetchUserFileSystem(userId) {
+    try {
+        console.log(`📡 Buscando fileSystem para userId: ${userId}`);
+        const url = `${window.API_URL}/filesystem/${userId}`;
+        console.log(`📍 URL completa: ${url}`);
+        
+        const response = await fetch(url);
+        console.log(`📨 Resposta do servidor - Status: ${response.status}`);
+        
+        if (!response.ok) {
+            console.warn(`⚠️ FileSystem não encontrado para usuário ${userId} - Status: ${response.status}`);
+            return null;
+        }
+        
+        const data = await response.json();
+        console.log(`✅ Dados recebidos para ${userId}:`, data);
+        
+        const fileSystem = data.fileSystem || data;
+        console.log(`📂 FileSystem processado:`, fileSystem);
+        
+        return fileSystem;
+    } catch (error) {
+        console.error(`❌ Erro ao buscar fileSystem do usuário ${userId}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Obtém data da última atualização do fileSystem
+ */
+function getLastUpdateDate(fileSystem) {
+    // Por enquanto, retornar data atual
+    // TODO: Implementar timestamps no servidor
+    return new Date().toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+/**
+ * Renderiza cards de documentos por usuário
+ */
+function renderUserDocumentCards(usersData) {
+    const container = document.getElementById('documents-by-user-container');
+    
+    const html = `
+        <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #f0f0f0;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-folder-open" style="color: white; font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h2 style="margin: 0; color: #1C2A39; font-size: 1.5rem; font-weight: 700;">Documentos do Projeto</h2>
+                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9rem;">Visualização organizada por participante</p>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem;">
+                ${usersData.map(userData => createUserDocumentCard(userData)).join('')}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    
+    // Adicionar event listeners para abrir arquivos
+    attachFileOpenListeners();
+}
+
+/**
+ * Cria card de documento para um usuário
+ */
+function createUserDocumentCard(userData) {
+    const { userName, categories, files, lastUpdate } = userData;
+    
+    // Obter iniciais do usuário
+    const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    
+    // Contar total de arquivos
+    let totalFiles = 0;
+    if (files && files.children) {
+        files.children.forEach(folder => {
+            if (folder.type === 'folder' && folder.children) {
+                totalFiles += folder.children.length;
+            }
+        });
+    }
+    
+    return `
+        <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; border: 2px solid #E8ECF0; transition: all 0.3s;" onmouseover="this.style.boxShadow='0 6px 20px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+            <!-- Header do Card -->
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid #e0e0e0;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
+                    ${initials}
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0; color: #1C2A39; font-size: 1.1rem; font-weight: 600;">${userName}</h3>
+                    <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.85rem;">
+                        <i class="fas fa-clock"></i> Atualizado: ${lastUpdate}
+                    </p>
+                </div>
+                <div style="text-align: right;">
+                    <div style="background: #4A90E2; color: white; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                        ${totalFiles} ${totalFiles === 1 ? 'arquivo' : 'arquivos'}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Categorias e Arquivos -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${categories.map((category, idx) => {
+                    const categoryFolder = files?.children?.find(f => f.name === category.name && f.type === 'folder');
+                    const categoryFiles = categoryFolder?.children || [];
+                    
+                    return `
+                        <div style="background: white; border-radius: 8px; padding: 1rem; border: 1px solid #e0e0e0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                <i class="fas fa-folder" style="color: ${getCategoryColor(idx)}; font-size: 1.1rem;"></i>
+                                <h4 style="margin: 0; color: #1C2A39; font-size: 0.95rem; font-weight: 600;">${category.name}</h4>
+                                <span style="background: #f0f0f0; color: #666; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; margin-left: auto;">
+                                    ${categoryFiles.length} ${categoryFiles.length === 1 ? 'arquivo' : 'arquivos'}
+                                </span>
+                            </div>
+                            
+                            ${categoryFiles.length > 0 ? `
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-left: 1.5rem;">
+                                    ${categoryFiles.map(file => `
+                                        <div class="file-item-readonly" data-user-id="${userData.userId}" data-file-path="${category.name}/${file.name}" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#e8f4fd'" onmouseout="this.style.background='#f8f9fa'">
+                                            <i class="fas fa-file-alt" style="color: #4A90E2; font-size: 0.9rem;"></i>
+                                            <span style="color: #555; font-size: 0.9rem; flex: 1;">${file.name}</span>
+                                            <i class="fas fa-eye" style="color: #999; font-size: 0.8rem;" title="Visualizar (somente leitura)"></i>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <p style="margin: 0; padding-left: 1.5rem; color: #999; font-size: 0.85rem; font-style: italic;">
+                                    Nenhum arquivo nesta categoria
+                                </p>
+                            `}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Adiciona event listeners para abrir arquivos em modo leitura
+ */
+function attachFileOpenListeners() {
+    const fileItems = document.querySelectorAll('.file-item-readonly');
+    
+    fileItems.forEach(item => {
+        item.addEventListener('click', async () => {
+            const userId = item.getAttribute('data-user-id');
+            const filePath = item.getAttribute('data-file-path');
+            
+            await openFileReadOnly(userId, filePath);
+        });
+    });
+}
+
+/**
+ * Abre arquivo em modo somente leitura
+ */
+async function openFileReadOnly(userId, filePath) {
+    try {
+        // Buscar fileSystem do usuário
+        const fileSystemData = await fetchUserFileSystem(userId);
+        
+        if (!fileSystemData) {
+            alert('❌ Não foi possível carregar o arquivo.');
+            return;
+        }
+        
+        // Navegar até o arquivo
+        const pathParts = filePath.split('/');
+        const folderName = pathParts[0];
+        const fileName = pathParts[1];
+        
+        const folder = fileSystemData.children.find(f => f.name === folderName && f.type === 'folder');
+        
+        if (!folder) {
+            alert('❌ Pasta não encontrada.');
+            return;
+        }
+        
+        const file = folder.children.find(f => f.name === fileName && f.type === 'file');
+        
+        if (!file) {
+            alert('❌ Arquivo não encontrado.');
+            return;
+        }
+        
+        // Criar modal de visualização
+        showFileReadOnlyModal(file, userId, filePath);
+        
+    } catch (error) {
+        console.error('❌ Erro ao abrir arquivo:', error);
+        alert('Erro ao abrir arquivo.');
+    }
+}
+
+/**
+ * Exibe modal com conteúdo do arquivo em modo leitura
+ */
+function showFileReadOnlyModal(file, userId, filePath) {
+    // Criar modal
+    const modal = document.createElement('div');
+    modal.id = 'file-readonly-modal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.2s;
+    `;
+    
+    const content = file.content || `# ${file.name}\n\nEste arquivo está vazio.`;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 16px; width: 90%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+            <!-- Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.5rem; border-bottom: 2px solid #f0f0f0;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-file-alt" style="color: white; font-size: 1.2rem;"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; color: #1C2A39; font-size: 1.2rem; font-weight: 600;">${file.name}</h3>
+                        <p style="margin: 0.25rem 0 0 0; color: #999; font-size: 0.85rem;">
+                            <i class="fas fa-lock"></i> Modo somente leitura
+                        </p>
+                    </div>
+                </div>
+                <button id="close-readonly-modal" style="background: none; border: none; color: #999; cursor: pointer; font-size: 1.5rem; padding: 0.5rem; transition: color 0.2s;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#999'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div style="flex: 1; overflow-y: auto; padding: 2rem; background: #f8f9fa;">
+                <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid #e0e0e0; min-height: 400px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; white-space: pre-wrap; word-wrap: break-word;">
+                    ${escapeHtml(content)}
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="padding: 1rem 1.5rem; border-top: 2px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+                <div style="color: #666; font-size: 0.85rem;">
+                    <i class="fas fa-info-circle"></i> Este documento não pode ser editado
+                </div>
+                <button id="refresh-readonly-btn" style="padding: 0.75rem 1.5rem; background: #4A90E2; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='#357ABD'" onmouseout="this.style.background='#4A90E2'">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Event listeners
+    document.getElementById('close-readonly-modal').addEventListener('click', () => {
+        document.body.removeChild(modal);
+    });
+    
+    document.getElementById('refresh-readonly-btn').addEventListener('click', async () => {
+        // Recarregar arquivo
+        const refreshBtn = document.getElementById('refresh-readonly-btn');
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+        refreshBtn.disabled = true;
+        
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Fechar modal atual
+        document.body.removeChild(modal);
+        
+        // Reabrir com dados atualizados
+        await openFileReadOnly(userId, filePath);
+    });
+    
+    // Fechar ao clicar fora
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
+}
+
+/**
+ * Escapa HTML para prevenção de XSS
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }

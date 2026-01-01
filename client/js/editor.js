@@ -1,4 +1,4 @@
-// Editor functionality - Word-like text editor
+  // Editor functionality - Word-like text editor
 
 let currentFile = null;
 
@@ -8,12 +8,16 @@ function openFileEditor(file) {
     currentFile = file;
     
     const fileEditor = document.getElementById('file-editor');
-    const defaultContent = document.getElementById('default-content');
     const content = document.getElementById('content');
     const container = document.querySelector('.pages-container');
     
-    if (!fileEditor || !defaultContent || !content || !container) {
-        console.error('Editor elements not found');
+    if (!fileEditor) {
+        console.error('file-editor element not found');
+        return;
+    }
+    
+    if (!container) {
+        console.error('pages-container element not found');
         return;
     }
     
@@ -26,8 +30,28 @@ function openFileEditor(file) {
     container.appendChild(page);
     
     fileEditor.style.display = 'flex';
-    defaultContent.style.display = 'none';
-    content.classList.add('editor-open');
+    
+    // Verificar se existe default-content antes de esconder
+    const defaultContent = document.getElementById('default-content');
+    if (defaultContent) {
+        defaultContent.style.display = 'none';
+    }
+    
+    // Verificar se existe home-container antes de esconder
+    const homeContainer = document.querySelector('.home-container');
+    if (homeContainer) {
+        homeContainer.style.display = 'none';
+    }
+    
+    // Verificar se existe project-container antes de esconder
+    const projectContainer = document.querySelector('.project-container');
+    if (projectContainer) {
+        projectContainer.style.display = 'none';
+    }
+    
+    if (content) {
+        content.classList.add('editor-open');
+    }
     
     // Focus on the page
     setTimeout(() => page.focus(), 100);
@@ -41,9 +65,13 @@ async function saveFile() {
         const page = document.querySelector('.page');
         currentFile.content = page ? page.innerHTML : '';
         
+        // Obter userId e API_URL
+        const userId = window.getUserId ? window.getUserId() : 'guest-user';
+        const apiUrl = window.API_URL || 'http://localhost:3000/api';
+        
         // Save to server
         try {
-            const response = await fetch(`${API_URL}/filesystem/${USER_ID}`, {
+            const response = await fetch(`${apiUrl}/filesystem/${userId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -53,11 +81,14 @@ async function saveFile() {
             
             if (response.ok) {
                 showSaveNotification();
+                console.log('✅ Arquivo salvo com sucesso');
             } else {
-                console.error('Error saving file');
+                console.error('❌ Erro ao salvar arquivo');
+                alert('Erro ao salvar arquivo. Tente novamente.');
             }
         } catch (error) {
-            console.error('Error saving file:', error);
+            console.error('❌ Erro ao salvar arquivo:', error);
+            alert('Erro ao salvar arquivo. Verifique sua conexão.');
         }
     }
 }
@@ -81,10 +112,35 @@ function showSaveNotification() {
 
 // Close editor
 function closeEditor() {
-    document.getElementById('file-editor').style.display = 'none';
-    document.getElementById('default-content').style.display = 'block';
-    document.getElementById('content').classList.remove('editor-open');
+    const fileEditor = document.getElementById('file-editor');
+    const content = document.getElementById('content');
+    
+    if (fileEditor) {
+        fileEditor.style.display = 'none';
+    }
+    
+    // Restaurar conteúdo que estava visível antes
+    const defaultContent = document.getElementById('default-content');
+    if (defaultContent) {
+        defaultContent.style.display = 'block';
+    }
+    
+    const homeContainer = document.querySelector('.home-container');
+    if (homeContainer) {
+        homeContainer.style.display = 'block';
+    }
+    
+    const projectContainer = document.querySelector('.project-container');
+    if (projectContainer) {
+        projectContainer.style.display = 'block';
+    }
+    
+    if (content) {
+        content.classList.remove('editor-open');
+    }
+    
     currentFile = null;
+    console.log('Editor fechado');
 }
 
 // Text formatting functions
