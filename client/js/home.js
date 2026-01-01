@@ -519,6 +519,7 @@ window.projectsData = projects;
 
 // URL do servidor do agente
 const AGENT_API_URL = 'http://localhost:3001/api/agent';
+// API_URL já está definido em main.js e exposto como window.API_URL
 
 // Função para enviar mensagem no modal (NOVA - com IA)
 async function sendModalMessage() {
@@ -599,6 +600,18 @@ async function sendModalMessage() {
         
         // Salvar no localStorage
         localStorage.setItem('projects', JSON.stringify(projects));
+        
+        // Criar estrutura de pastas e arquivos para o criador
+        const currentUserName = currentUser.fullName || 'Você';
+        const currentUserId = currentUser._id || currentUser.id;
+        
+        if (newProject.structure?.categories) {
+            await createProjectFileStructure(
+                newProject.structure.categories, 
+                currentUserName, 
+                currentUserId
+            );
+        }
         
         // Enviar convites aos colaboradores (se houver)
         if (selectedCollaborators.length > 0) {
@@ -892,6 +905,68 @@ function hidePromptIfNeeded() {
 const COLLABORATION_API = 'http://localhost:3001/api/collaboration';
 let selectedCollaborators = [];
 
+// ===========================
+// CRIAÇÃO AUTOMÁTICA DE PASTAS E ARQUIVOS
+// ===========================
+
+/**
+ * Cria estrutura de pastas (categorias) e arquivos (subcategorias) no fileSystem
+ * @param {Array} categories - Array de categorias do projeto
+ * @param {string} userName - Nome do usuário para filtrar categorias atribuídas a ele
+ * @param {string} userId - ID do usuário
+ */
+async function createProjectFileStructure(categories, userName, userId) {
+    console.log(`📁 Criando estrutura de arquivos para ${userName}...`);
+    
+    // Filtrar apenas categorias atribuídas a este usuário
+    const userCategories = categories.filter(category => 
+        category.assignedTo === userName
+    );
+    
+    console.log(`✅ ${userCategories.length} categorias atribuídas a ${userName}`);
+    
+    if (userCategories.length === 0) {
+        console.log('⚠️ Nenhuma categoria atribuída, pulando criação de arquivos');
+        return;
+    }
+    
+    // Construir estrutura de pastas e arquivos
+    const fileSystemStructure = {
+        name: 'Root',
+        type: 'folder',
+        children: userCategories.map(category => ({
+            name: category.name,
+            type: 'folder',
+            children: (category.subcategories || []).map(subcategory => ({
+                name: typeof subcategory === 'string' ? subcategory : subcategory.name,
+                type: 'file',
+                content: `# ${typeof subcategory === 'string' ? subcategory : subcategory.name}\n\n${subcategory.description || 'Comece a escrever aqui...'}`
+            }))
+        }))
+    };
+    
+    console.log('📦 Estrutura gerada:', fileSystemStructure);
+    
+    // Salvar no servidor
+    try {
+        const response = await fetch(`${window.API_URL}/filesystem/${userId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(fileSystemStructure)
+        });
+        
+        if (response.ok) {
+            console.log(`✅ Estrutura de arquivos salva para ${userName}`);
+        } else {
+            console.error('❌ Erro ao salvar estrutura de arquivos:', await response.text());
+        }
+    } catch (error) {
+        console.error('❌ Erro ao salvar estrutura de arquivos:', error);
+    }
+}
+
 // Setup event listeners para colaboradores
 function setupCollaboratorListeners() {
     const searchBtn = document.getElementById('search-collaborator-btn');
@@ -1069,6 +1144,7 @@ async function sendCollaboratorInvites(projectId, projectTitle, projectDescripti
     
     const invitePromises = selectedCollaborators.map(async (collaborator) => {
         try {
+            // Enviar convite ao servidor
             const response = await fetch(`${COLLABORATION_API}/invite`, {
                 method: 'POST',
                 headers: {
@@ -1091,6 +1167,15 @@ async function sendCollaboratorInvites(projectId, projectTitle, projectDescripti
             
             if (data.success) {
                 console.log(`✅ Convite enviado para ${collaborator.fullName}`);
+                
+                // Criar estrutura de pastas/arquivos para este colaborador
+                if (fullProject?.structure?.categories) {
+                    await createProjectFileStructure(
+                        fullProject.structure.categories,
+                        collaborator.fullName,
+                        collaborator.id
+                    );
+                }
             } else {
                 console.error(`❌ Erro ao enviar convite para ${collaborator.fullName}:`, data.error);
             }
