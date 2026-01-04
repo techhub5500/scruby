@@ -1229,18 +1229,20 @@ window.loadAllProjects = async function loadAllProjects() {
                 let allParticipants = [];
                 
                 if (participantsData.success) {
-                    // Adicionar todos os participantes que aceitaram
+                    // Adicionar todos os participantes que aceitaram COM userId
                     allParticipants = participantsData.participants.map(p => ({
                         name: p.name,
                         initials: p.initials,
                         role: 'Colaborador',
-                        progress: 0
+                        progress: 0,
+                        userId: p.userId // ⚠️ IMPORTANTE: Incluir userId aqui!
                     }));
                 }
                 
                 // Adicionar o criador (buscar do projeto original se necessário)
                 const creatorName = sharedProject.sharedBy;
                 const creatorInitials = creatorName.split(' ').map(n => n[0]).join('').toUpperCase();
+                const creatorUserId = sharedProject.creatorId; // ⚠️ Precisamos deste campo no convite
                 
                 // Verificar se o criador já não está na lista de participantes
                 const creatorExists = allParticipants.some(p => p.name === creatorName);
@@ -1249,7 +1251,8 @@ window.loadAllProjects = async function loadAllProjects() {
                         name: creatorName,
                         initials: creatorInitials,
                         role: 'Criador',
-                        progress: 0
+                        progress: 0,
+                        userId: creatorUserId // ⚠️ IMPORTANTE: Incluir userId do criador!
                     });
                 }
                 

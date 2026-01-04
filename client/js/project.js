@@ -421,6 +421,10 @@ async function showDocumentsByUser() {
     // Buscar estrutura do projeto
     const structure = currentProject?.structure;
     
+    console.log('🔍 Projeto atual:', currentProject);
+    console.log('📋 Estrutura do projeto:', structure);
+    console.log('👥 Participantes do projeto:', currentProject?.participants);
+    
     if (!structure || !structure.categories || structure.categories.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 3rem; background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
@@ -431,6 +435,9 @@ async function showDocumentsByUser() {
         `;
         return;
     }
+    
+    console.log('📂 Total de categorias:', structure.categories.length);
+    console.log('📝 Categorias:', structure.categories.map(c => ({ name: c.name, assignedTo: c.assignedTo })));
     
     // Agrupar categorias por usuário
     const userCategories = {};
@@ -443,13 +450,27 @@ async function showDocumentsByUser() {
         userCategories[assignedUser].push(category);
     });
     
-    console.log('📊 Categorias por usuário:', userCategories);
+    console.log('📊 Categorias agrupadas por usuário:', userCategories);
+    console.log('🔢 Total de usuários com categorias:', Object.keys(userCategories).length);
     
     // Buscar fileSystem de cada usuário
     const usersData = await Promise.all(
         Object.keys(userCategories).map(async (userName) => {
+            console.log(`\n🔍 Processando usuário: "${userName}"`);
+            
             // Encontrar participante pelo nome
-            const participant = currentProject.participants.find(p => p.name === userName);
+            // Se o userName é "Você", precisa encontrar o criador
+            let participant;
+            
+            if (userName === 'Você') {
+                // Buscar o criador do projeto
+                participant = currentProject.participants.find(p => p.role === 'Criador');
+                console.log('🎯 Buscando criador:', participant);
+            } else {
+                // Buscar participante pelo nome normal
+                participant = currentProject.participants.find(p => p.name === userName);
+                console.log('👤 Buscando participante normal:', participant);
+            }
             
             if (!participant) {
                 console.warn(`⚠️ Participante ${userName} não encontrado`);
@@ -468,8 +489,11 @@ async function showDocumentsByUser() {
             const fileSystemData = await fetchUserFileSystem(userId);
             console.log(`📊 FileSystem obtido para ${userName}:`, fileSystemData);
             
+            // Usar nome real do participante, não "Você"
+            const displayName = participant.name || userName;
+            
             const userData = {
-                userName,
+                userName: displayName, // Usar nome real
                 userId,
                 categories: userCategories[userName],
                 files: fileSystemData,
@@ -507,19 +531,23 @@ async function showDocumentsByUser() {
  * Busca ID do usuário pelo nome
  */
 async function getUserIdByName(userName, participant) {
-    console.log('🔍 Buscando ID para:', userName, 'Participante:', participant);
+    console.log('🔍 Buscando ID para:', userName);
+    console.log('📋 Participante recebido:', participant);
+    console.log('🎯 currentProject.participants:', currentProject?.participants);
     
     // Se o participante já tem ID, usar diretamente (verificar id e userId)
     if (participant) {
         const participantId = participant.userId || participant.id || participant._id;
         if (participantId) {
-            console.log('✅ ID encontrado no participante:', participantId);
+            console.log('✅ ID encontrado no participante direto:', participantId);
             return participantId;
         }
     }
     
     // Verificar se é o usuário atual
     const currentUser = getCurrentUser();
+    console.log('👤 Usuário atual:', currentUser);
+    
     if (currentUser) {
         // Comparar com fullName, name ou username
         if (currentUser.fullName === userName || 
@@ -527,28 +555,39 @@ async function getUserIdByName(userName, participant) {
             currentUser.username === userName ||
             userName === 'Você') {
             const userId = currentUser._id || currentUser.id;
-            console.log('✅ Usuário atual identificado, ID:', userId);
+            console.log('✅ É o usuário atual, ID:', userId);
             return userId;
         }
     }
     
-    // Buscar nos participantes do projeto atual
+    // Buscar nos participantes do projeto atual (MAIS COMPLETO)
     if (currentProject && currentProject.participants) {
-        const projectParticipant = currentProject.participants.find(p => 
-            p.name === userName || p.fullName === userName || p.username === userName
-        );
+        console.log('🔎 Buscando em currentProject.participants...');
         
-        if (projectParticipant) {
-            const participantId = projectParticipant.userId || projectParticipant.id || projectParticipant._id;
-            if (participantId) {
-                console.log('✅ ID encontrado nos participantes do projeto:', participantId);
-                return participantId;
+        // Tentar todas as possíveis combinações
+        for (const p of currentProject.participants) {
+            console.log(`   Comparando com participante:`, p);
+            
+            if (p.name === userName || 
+                p.fullName === userName || 
+                p.username === userName ||
+                (userName === 'Você' && p.role === 'Criador')) {
+                
+                const participantId = p.userId || p.id || p._id;
+                if (participantId) {
+                    console.log('✅ ID encontrado nos participantes do projeto:', participantId);
+                    return participantId;
+                } else {
+                    console.warn('⚠️ Participante encontrado mas sem ID:', p);
+                }
             }
         }
     }
     
     // Buscar nos colaboradores selecionados (se disponível)
     const storedCollaborators = JSON.parse(sessionStorage.getItem('project_collaborators') || '[]');
+    console.log('📦 Colaboradores armazenados:', storedCollaborators);
+    
     const collaborator = storedCollaborators.find(c => 
         c.fullName === userName || c.name === userName || c.username === userName
     );
@@ -561,7 +600,13 @@ async function getUserIdByName(userName, participant) {
         }
     }
     
-    console.warn('⚠️ ID não encontrado para:', userName);
+    console.error('❌ ID não encontrado para:', userName);
+    console.error('❌ Dados disponíveis:');
+    console.error('   - Participante:', participant);
+    console.error('   - Usuário atual:', currentUser);
+    console.error('   - Participantes do projeto:', currentProject?.participants);
+    console.error('   - Colaboradores armazenados:', storedCollaborators);
+    
     return null;
 }
 

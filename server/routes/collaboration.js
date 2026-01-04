@@ -426,6 +426,7 @@ router.get('/projects/:userId', async (req, res) => {
                 estimatedPages: inv.estimatedPages || null,
                 suggestedDeadline: inv.suggestedDeadline || null,
                 sharedBy: inv.fromUserName,
+                creatorId: inv.fromUserId, // ⚠️ IMPORTANTE: Incluir ID do criador!
                 sharedAt: inv.acceptedAt
             }))
         });
@@ -471,6 +472,7 @@ router.get('/project/:projectId/participants', async (req, res) => {
                     
                     return {
                         id: user._id,
+                        userId: user._id, // ⚠️ IMPORTANTE: Adicionar userId também!
                         name: fullName,
                         username: user.username,
                         initials: initials
